@@ -1,0 +1,208 @@
+{
+  "id": "inc-005",
+  "title": "Cache hit ratio collapsed — catalog service (cache stampede after Redis FLUSHALL)",
+  "severity": "critical",
+  "service": "catalog",
+  "category": "saturation",
+  "description": "Cache hit ratio for the catalog service collapsed from 0.94 to 0.12 within seconds of a Redis FLUSHALL that evicted all 41,820 keys. Concurrent requests for the same hot keys (e.g. product:42) all missed simultaneously and stampeded to Postgres. Without request coalescing, identical DB queries were executed in parallel, spiking Postgres p99 to 740ms and catalog p99 to 880ms. The catalog pods themselves are healthy (no restarts, CPU and memory within limits); the fault is at the cache layer.",
+  "alert": {
+    "title": "[synthetic-k8s] cache hit ratio 12% on catalog — catalog-6f9c8b5d74-r8k2n",
+    "state": "alerting",
+    "labels": {
+      "alertname": "CacheStampede",
+      "severity": "critical",
+      "service": "catalog",
+      "namespace": "rlvr-target",
+      "workload_type": "deployment",
+      "workload_name": "catalog",
+      "cluster_name": "rlvr-bench"
+    },
+    "annotations": {
+      "summary": "catalog cache hit ratio collapsed to 0.12 (SLO 0.70) in rlvr-target",
+      "description": "app_cache_hit_ratio for catalog dropped from a steady 0.94 to 0.12 within seconds of a Redis FLUSHALL. The cache is cold and concurrent requests for the same keys are all missing at once."
+    }
+  },
+  "logs": [
+    "2026-06-20T14:21:58Z INFO  serving request id=req-7c10 path=/api/products?id=42 cache=HIT ratio=0.94",
+    "2026-06-20T14:22:03Z WARN  cache GET miss key=product:42 (was HIT 5s ago) — backing store fetch",
+    "2026-06-20T14:22:04Z WARN  cache GET miss key=product:42 key=product:42 key=product:42 (3 concurrent misses, same key, no coalescing) — all dispatched to Postgres",
+    "2026-06-20T14:22:05Z ERROR CacheStampede: hit ratio dropped to 12% after FLUSHALL",
+    "2026-06-20T14:22:05Z WARN  Postgres pool checkout slow: 612ms (herd of cold-cache misses) inflight_db_queries=63",
+    "2026-06-20T14:22:11Z WARN  cache repopulating: 4,910/41,820 keys warm, hit ratio 0.18 and rising slowly under load",
+    "2026-06-20T14:24:41Z ERROR CacheStampede: hit ratio dropped to 12% after FLUSHALL"
+  ],
+  "metrics": {
+    "service": "catalog",
+    "namespace": "rlvr-target",
+    "window": "2m",
+    "metrics": {
+      "app_cache_hit_ratio": 0.12,
+      "cache_requests_per_s": 1980,
+      "cache_misses_per_s": 1742,
+      "cache_keys_resident": 5210,
+      "db_query_p99_ms": 740,
+      "db_pool_in_use_pct": 78,
+      "p99_latency_ms": 880,
+      "error_rate_pct": 1.2,
+      "request_rate_rps": 210,
+      "cpu_util_pct": 47,
+      "memory_util_pct": 39,
+      "ready_replicas_pct": 100,
+      "restart_count": 0
+    },
+    "baseline": {
+      "app_cache_hit_ratio": 0.94,
+      "cache_requests_per_s": 1960,
+      "cache_misses_per_s": 118,
+      "cache_keys_resident": 41820,
+      "db_query_p99_ms": 58,
+      "p99_latency_ms": 120,
+      "cpu_util_pct": 44,
+      "memory_util_pct": 38
+    }
+  },
+  "traces": {
+    "service": "catalog",
+    "sampled_spans": 4,
+    "summary": "Slow requests are dominated by synchronous Postgres reads caused by cache misses; the DB itself is healthy per-query, but is being hit by a herd of redundant lookups for the same hot keys because the cache is cold and there is no request coalescing.",
+    "spans": [
+      {
+        "trace_id": "c4a9...1f",
+        "root": "catalog:/api/products",
+        "total_ms": 902,
+        "breakdown": [
+          {"span": "catalog.cache_get", "ms": 4, "note": "MISS key=product:42"},
+          {"span": "catalog.db_query", "ms": 731, "note": "SELECT * FROM products WHERE id=42 — cold-cache fallthrough, queued behind 63 identical concurrent queries"},
+          {"span": "catalog.handler", "ms": 18},
+          {"span": "catalog.cache_set", "ms": 6, "note": "repopulating key=product:42"}
+        ]
+      },
+      {
+        "trace_id": "d2b7...88",
+        "root": "catalog:/api/products",
+        "total_ms": 869,
+        "breakdown": [
+          {"span": "catalog.cache_get", "ms": 3, "note": "MISS key=product:42 (same key as concurrent traces — no coalescing)"},
+          {"span": "catalog.db_query", "ms": 702, "note": "duplicate SELECT for product:42 — thundering herd, single hot key fanned out to many DB reads"},
+          {"span": "catalog.handler", "ms": 16}
+        ]
+      }
+    ]
+  },
+  "pod_status": {
+    "namespace": "rlvr-target",
+    "pods": [
+      {
+        "name": "catalog-6f9c8b5d74-r8k2n",
+        "node": "gke-rlvr-bench-default-pool-fb893fdf-2hxn",
+        "phase": "Running",
+        "ready": "1/1",
+        "restarts": 0,
+        "age": "8d2h",
+        "container": {
+          "name": "catalog",
+          "image": "registry.rlvr/catalog:v3.1.2",
+          "state": "running",
+          "cpu_request": "250m",
+          "cpu_limit": "1000m",
+          "memory_request": "256Mi",
+          "memory_limit": "512Mi"
+        },
+        "conditions": [
+          {"type": "Ready", "status": "True"},
+          {"type": "ContainersReady", "status": "True"}
+        ]
+      },
+      {
+        "name": "catalog-6f9c8b5d74-tq4ws",
+        "node": "gke-rlvr-bench-default-pool-fb893fdf-8rmq",
+        "phase": "Running",
+        "ready": "1/1",
+        "restarts": 0,
+        "age": "8d2h",
+        "container": {
+          "name": "catalog",
+          "image": "registry.rlvr/catalog:v3.1.2",
+          "state": "running",
+          "cpu_request": "250m",
+          "cpu_limit": "1000m",
+          "memory_request": "256Mi",
+          "memory_limit": "512Mi"
+        },
+        "conditions": [
+          {"type": "Ready", "status": "True"},
+          {"type": "ContainersReady", "status": "True"}
+        ]
+      }
+    ]
+  },
+  "k8s_events": [
+    {
+      "type": "Warning",
+      "reason": "CacheFlushed",
+      "object": "pod/redis-0",
+      "source": "redis-cli",
+      "count": 1,
+      "first_seen": "2026-06-20T14:22:03Z",
+      "last_seen": "2026-06-20T14:22:03Z",
+      "message": "Redis FLUSHALL executed against the catalog cache keyspace (db0) — all 41,820 keys evicted in a single command"
+    },
+    {
+      "type": "Warning",
+      "reason": "CacheHitRatioLow",
+      "object": "pod/catalog-6f9c8b5d74-r8k2n",
+      "source": "prometheus",
+      "count": 28,
+      "first_seen": "2026-06-20T14:22:06Z",
+      "last_seen": "2026-06-20T14:24:41Z",
+      "message": "app_cache_hit_ratio for catalog fell to 0.12 (SLO 0.70); concurrent misses for the same hot keys stampeding to Postgres"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackendLatencyHigh",
+      "object": "pod/catalog-6f9c8b5d74-tq4ws",
+      "source": "catalog",
+      "count": 14,
+      "first_seen": "2026-06-20T14:22:08Z",
+      "last_seen": "2026-06-20T14:24:39Z",
+      "message": "Postgres query p99 climbed to 740ms under the miss storm; no request coalescing in front of the cache"
+    }
+  ],
+  "deployments": {
+    "namespace": "rlvr-target",
+    "deployment": "catalog",
+    "replicas": {"desired": 3, "ready": 3, "available": 3, "updated": 3},
+    "current_revision": 11,
+    "image": "registry.rlvr/catalog:v3.1.2",
+    "last_rollout": "8d2h ago",
+    "rollout_status": "complete",
+    "conditions": [
+      {"type": "Available", "status": "True", "reason": "MinimumReplicasAvailable"},
+      {"type": "Progressing", "status": "True", "reason": "NewReplicaSetAvailable"}
+    ]
+  },
+  "node_health": null,
+  "tags": ["cache_stampede", "catalog", "redis", "thundering_herd", "saturation", "synthetic"],
+  "source": "quantranger/sre-agent-eda-bundle",
+  "source_record_id": "009-cache_stampede",
+  "_ground_truth": {
+    "root_cause": "A Redis FLUSHALL command evicted all 41,820 keys from the catalog cache at 14:22:03. Concurrent requests for hot keys (e.g. product:42) all missed simultaneously and stampeded to Postgres without request coalescing, dispatching dozens of identical DB queries in parallel. The Postgres pool climbed to 78% utilization and query p99 spiked to 740ms solely as a downstream effect of the miss storm. Cache hit ratio collapsed from 0.94 to 0.12. The catalog pods, nodes, and DB are themselves healthy.",
+    "root_cause_category": "saturation",
+    "resolution_steps": [
+      "Confirm the FLUSHALL event in k8s events: CacheFlushed warning on pod/redis-0 at 14:22:03",
+      "Verify cache miss storm: app_cache_hit_ratio == 0.12 (was 0.94), cache_misses_per_s jumped ~15x",
+      "Warm the cache by seeding hot product keys: trigger catalog /api/products requests for top IDs",
+      "Monitor app_cache_hit_ratio recovery toward baseline (0.94)",
+      "Long-term: implement request coalescing (single-flight) in catalog service to prevent thundering herd"
+    ],
+    "expected_evidence": [
+      "cache stampede", "FLUSHALL", "cache hit ratio", "0.12", "cold cache",
+      "thundering herd", "request coalescing", "app_cache_hit_ratio"
+    ],
+    "canonical_fix": "kubectl exec -n rlvr-target deploy/catalog -- bash -c 'for i in $(seq 1 100); do curl -s http://localhost:8080/api/products?id=$i >/dev/null; done'",
+    "fix_tool": "warm_cache",
+    "forbidden_categories": [
+      "bad_deploy", "dependency_failure", "resource_exhaustion", "node_failure", "config_error"
+    ]
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "id": "inc-003",
+  "title": "High 5xx error rate — orders service (bad deploy, revision 12)",
+  "severity": "critical",
+  "service": "orders",
+  "category": "bad_deploy",
+  "description": "The orders deployment in rlvr-target began returning HTTP 500 on the /checkout path immediately after revision 12 rolled the image to rlvr/orders:v2-broken. The error rate spiked to 8% (SLO: 1%) across both running pods. Pods are healthy at the runtime level (no crashloop, memory and CPU under limits); the fault is entirely in the application code introduced by the new image.",
+  "alert": {
+    "title": "[synthetic-k8s] High 5xx error rate — orders-6f9c7d8b54-7nq2x",
+    "state": "alerting",
+    "labels": {
+      "alertname": "BadDeploy",
+      "severity": "critical",
+      "service": "orders",
+      "namespace": "rlvr-target",
+      "workload_type": "deployment",
+      "workload_name": "orders",
+      "cluster_name": "rlvr-bench"
+    },
+    "annotations": {
+      "summary": "orders 5xx error rate spiked to 8% right after a rollout",
+      "description": "The orders deployment in rlvr-target began returning HTTP 500 on the /checkout path immediately after revision 12 rolled the image to rlvr/orders:v2-broken at 19:36."
+    }
+  },
+  "logs": [
+    "2026-06-20T19:36:18.220Z INFO  orders starting rlvr/orders:v2-broken build 9b2ee01 (revision 12)",
+    "2026-06-20T19:36:18.231Z INFO  config loaded; db reachable (postgres.rlvr-target:5432 ok); pool 22/100; dns ok",
+    "2026-06-20T19:36:18.402Z INFO  http server listening :8080; readiness OK",
+    "2026-06-20T19:40:07.118Z INFO  POST /checkout 200 ok=false trace=… (legacy path)",
+    "2026-06-20T19:40:09.553Z ERROR DeployError: orders v2 returns 500 on /checkout",
+    "2026-06-20T19:40:09.554Z ERROR panic in checkoutHandler: nil pointer dereference (orders.v2.PriceQuote) -> HTTP 500",
+    "2026-06-20T19:40:11.902Z ERROR POST /checkout 500 (8% of requests now 5xx since v2-broken rollout)"
+  ],
+  "metrics": {
+    "queries": [
+      {
+        "metric": "app_error_rate",
+        "value": 0.08,
+        "slo_threshold": 0.01,
+        "direction": "lower",
+        "breached": true,
+        "unit": "ratio",
+        "note": "8% of orders requests are 5xx since the revision 12 rollout"
+      },
+      {
+        "metric": "ready_replicas_pct",
+        "value": 100,
+        "unit": "percent",
+        "note": "2 of 2 replicas Ready — pods are up and serving, just erroring (not a crashloop)"
+      },
+      {
+        "metric": "memory_util_pct",
+        "value": 41,
+        "unit": "percent",
+        "note": "well under 512Mi limit — not resource exhaustion"
+      },
+      {
+        "metric": "cpu_cores",
+        "value": 0.22,
+        "unit": "cores",
+        "note": "under the 500m limit — not CPU throttling"
+      },
+      {
+        "metric": "db_conn_in_use",
+        "value": 22,
+        "unit": "connections",
+        "note": "22/100 pool — DB dependency is healthy"
+      }
+    ]
+  },
+  "traces": null,
+  "pod_status": {
+    "namespace": "rlvr-target",
+    "pods": [
+      {
+        "name": "orders-6f9c7d8b54-7nq2x",
+        "node": "gke-rlvr-bench-default-pool-fb893fdf-2hxn",
+        "phase": "Running",
+        "ready": "2/2",
+        "restarts": 0,
+        "age": "9m",
+        "containers": [
+          {
+            "name": "orders",
+            "image": "rlvr/orders:v2-broken",
+            "ready": true,
+            "started": true,
+            "restartCount": 0,
+            "state": {"running": {"startedAt": "2026-06-20T19:36:18Z"}},
+            "resources": {
+              "limits": {"memory": "512Mi", "cpu": "500m"},
+              "requests": {"memory": "256Mi", "cpu": "250m"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "orders-6f9c7d8b54-kd4lm",
+        "node": "gke-rlvr-bench-default-pool-fb893fdf-9wrl",
+        "phase": "Running",
+        "ready": "2/2",
+        "restarts": 0,
+        "age": "9m",
+        "containers": [
+          {
+            "name": "orders",
+            "image": "rlvr/orders:v2-broken",
+            "ready": true,
+            "started": true,
+            "restartCount": 0,
+            "state": {"running": {"startedAt": "2026-06-20T19:36:24Z"}},
+            "resources": {
+              "limits": {"memory": "512Mi", "cpu": "500m"},
+              "requests": {"memory": "256Mi", "cpu": "250m"}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "k8s_events": [
+    {
+      "lastTimestamp": "2026-06-20T19:36:02Z",
+      "type": "Normal",
+      "reason": "ScalingReplicaSet",
+      "involvedObject": "deployment/orders",
+      "count": 1,
+      "message": "Scaled up replica set orders-6f9c7d8b54 to 2 (image set to rlvr/orders:v2-broken)"
+    },
+    {
+      "lastTimestamp": "2026-06-20T19:36:24Z",
+      "type": "Normal",
+      "reason": "ScalingReplicaSet",
+      "involvedObject": "deployment/orders",
+      "count": 1,
+      "message": "Scaled down replica set orders-5c4b9a7f61 to 0 (previous revision rlvr/orders:v1.9.4)"
+    },
+    {
+      "lastTimestamp": "2026-06-20T19:40:11Z",
+      "type": "Warning",
+      "reason": "HighErrorRate",
+      "involvedObject": "service/orders",
+      "count": 5,
+      "message": "orders 5xx ratio 0.08 exceeds SLO 0.01 on /checkout since revision 12 rollout"
+    }
+  ],
+  "deployments": {
+    "namespace": "rlvr-target",
+    "deployment": "orders",
+    "desired": 2,
+    "updated": 2,
+    "ready": 2,
+    "available": 2,
+    "unavailable": 0,
+    "image": "rlvr/orders:v2-broken",
+    "previous_image": "rlvr/orders:v1.9.4",
+    "current_revision": 12,
+    "previous_revision": 11,
+    "last_revision_change": "2026-06-20T19:36:02Z",
+    "minutes_since_last_rollout": 9,
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "True",
+        "reason": "MinimumReplicasAvailable",
+        "message": "Deployment has minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "NewReplicaSetAvailable",
+        "message": "ReplicaSet orders-6f9c7d8b54 (image rlvr/orders:v2-broken) has successfully progressed."
+      }
+    ]
+  },
+  "node_health": {
+    "nodes": [
+      {
+        "name": "gke-rlvr-bench-default-pool-fb893fdf-2hxn",
+        "Ready": "True",
+        "MemoryPressure": "False",
+        "DiskPressure": "False",
+        "PIDPressure": "False",
+        "allocatable_memory": "7.5Gi"
+      },
+      {
+        "name": "gke-rlvr-bench-default-pool-fb893fdf-9wrl",
+        "Ready": "True",
+        "MemoryPressure": "False",
+        "DiskPressure": "False",
+        "PIDPressure": "False",
+        "allocatable_memory": "7.5Gi"
+      }
+    ]
+  },
+  "tags": ["bad_deploy", "orders", "5xx", "rollback", "kubernetes", "synthetic"],
+  "source": "quantranger/sre-agent-eda-bundle",
+  "source_record_id": "011-bad_deploy_errors",
+  "_ground_truth": {
+    "root_cause": "Deployment revision 12 rolled out a broken image (rlvr/orders:v2-broken) containing a nil pointer dereference in checkoutHandler. The /checkout endpoint panics on every request due to an uninitialized PriceQuote struct in v2, causing 8% of requests to return HTTP 500. The DB pool is healthy (22/100), CPU and memory are within limits — the fault is entirely in the new application code.",
+    "root_cause_category": "bad_deploy",
+    "resolution_steps": [
+      "Identify the bad revision: kubectl rollout history deployment/orders -n rlvr-target",
+      "Roll back to the previous revision: kubectl rollout undo deployment/orders -n rlvr-target",
+      "Verify rollback: kubectl rollout status deployment/orders -n rlvr-target",
+      "Confirm error rate returns below SLO: app_error_rate < 0.01"
+    ],
+    "expected_evidence": [
+      "rollout", "revision 12", "rlvr/orders:v2-broken", "5xx", "/checkout", "HTTP 500", "rollback"
+    ],
+    "canonical_fix": "kubectl rollout undo deployment/orders -n rlvr-target",
+    "fix_tool": "rollback_deployment",
+    "forbidden_categories": [
+      "resource_exhaustion", "node_failure", "network_fault", "config_error", "dependency_failure"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "inc-001",
+  "title": "Database connection pool exhausted — order-processing-api",
+  "service": "order-processing-api",
+  "severity": "high",
+  "timestamp": "2026-09-27T08:14:00Z",
+  "duration_minutes": 47,
+  "environment": "production",
+  "symptoms": [
+    "p99 API latency exceeds 12 s (baseline: 180 ms)",
+    "Requests queuing behind connection pool; 503 errors rising",
+    "PostgreSQL reports max_connections reached (20/20 active)",
+    "Order checkout success rate dropped from 99.2 % to 61 %"
+  ],
+  "metrics": {
+    "connection_pool_size": 20,
+    "connections_active": 20,
+    "connections_idle": 0,
+    "avg_query_time_ms": 4200,
+    "p99_latency_ms": 12400,
+    "error_rate_pct": 34.1,
+    "requests_per_second": 42,
+    "cpu_pct": 18,
+    "memory_pct": 44
+  },
+  "logs": [
+    "[08:14:02] WARN  order-api: connection pool exhausted, waiting for available slot (timeout=5s)",
+    "[08:14:07] ERROR order-api: PoolTimeout acquiring connection after 5000 ms",
+    "[08:14:07] ERROR order-api: GET /checkout/complete -> 503 Service Unavailable",
+    "[08:14:09] WARN  postgres: remaining connection slots reserved for replication",
+    "[08:15:22] WARN  order-api: slow query detected (4312 ms): SELECT * FROM products WHERE id=?",
+    "[08:15:22] WARN  order-api: slow query detected (4289 ms): SELECT * FROM products WHERE id=?",
+    "[08:15:22] WARN  order-api: slow query detected (4301 ms): SELECT * FROM products WHERE id=?"
+  ],
+  "topology": {
+    "service": "order-processing-api",
+    "replicas": 3,
+    "dependencies": [
+      { "name": "postgresql-orders", "type": "database", "pool_size": 20 },
+      { "name": "redis-sessions",    "type": "cache" },
+      { "name": "inventory-service", "type": "upstream-api" }
+    ]
+  },
+  "recent_deploys": [
+    {
+      "version": "v2.4.1",
+      "deployed_at": "2026-09-27T05:10:00Z",
+      "description": "Checkout flow refactor: new get_order_items() method in checkout_flow.py",
+      "deployed_by": "ci-pipeline"
+    },
+    {
+      "version": "v2.4.0",
+      "deployed_at": "2026-09-25T14:00:00Z",
+      "description": "Dependency updates, no logic changes",
+      "deployed_by": "ci-pipeline"
+    }
+  ],
+  "_ground_truth": {
+    "root_cause": "N+1 query regression introduced in v2.4.1. checkout_flow.get_order_items() iterates over order items and issues a separate SELECT query per item against the products table rather than a single batched query. Under typical load (15–20 items per order) this generates 15–20 concurrent queries per checkout request, saturating the 20-connection pool.",
+    "root_cause_file": "backend/checkout_flow.py",
+    "root_cause_line": 142,
+    "resolution_steps": [
+      "Option A (immediate): roll back to v2.4.0 via the CI pipeline rollback command.",
+      "Option B (fix forward): in checkout_flow.py line 142, replace per-item SELECT with a single IN-clause query: `Product.objects.filter(id__in=item_ids).all()` (Django ORM) or equivalent join.",
+      "Verify fix by re-running the checkout load test; pool idle connections should return above 10."
+    ]
+  }
+}

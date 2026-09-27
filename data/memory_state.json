@@ -1,0 +1,24 @@
+{
+  "postmortems": {
+    "inc-003": {
+      "incident_id": "inc-003",
+      "service": "orders",
+      "category": "bad_deploy",
+      "severity": "critical",
+      "retained_at": "2026-09-27T14:49:17.765102Z",
+      "approval_status": "pending",
+      "tags": [
+        "orders",
+        "postmortem",
+        "inc-003",
+        "bad_deploy"
+      ],
+      "document_id": "inc-003",
+      "evidence_refs": [
+        "ERROR panic in checkoutHandler: nil pointer dereference (orders.v2.PriceQuote)",
+        "8% 5xx error rate immediately after revision 12 rollout of rlvr/orders:v2-broken"
+      ],
+      "source_fixture": "011-bad_deploy_errors"
+    }
+  }
+}

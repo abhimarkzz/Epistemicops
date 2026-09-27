@@ -1,0 +1,70 @@
+{
+  "id": "inc-002",
+  "title": "Memory leak causing OOM restarts — payment-service",
+  "service": "payment-service",
+  "severity": "critical",
+  "timestamp": "2026-09-26T19:30:00Z",
+  "duration_minutes": 210,
+  "environment": "production",
+  "symptoms": [
+    "payment-service pod restarted 3 times in 4 hours with OOMKilled status",
+    "Heap memory growing monotonically ~50 MB/hour since v1.8.2 deploy",
+    "Garbage collector running at maximum frequency; memory not reclaimed",
+    "PDF receipt generation path active in all pods showing memory growth"
+  ],
+  "metrics": {
+    "memory_mb_current": 1840,
+    "memory_limit_mb": 2048,
+    "memory_mb_at_start_of_shift": 312,
+    "memory_growth_mb_per_hour": 51,
+    "gc_full_collections_last_hour": 214,
+    "gc_objects_uncollected": 18400,
+    "pod_restarts": 3,
+    "cpu_pct": 31,
+    "receipts_generated_since_deploy": 1620
+  },
+  "logs": [
+    "[19:30:01] CRITICAL k8s: pod payment-service-7d9b4c restarted — OOMKilled (exit 137)",
+    "[19:30:15] INFO    payment-service: pod started, memory baseline 310 MB",
+    "[20:45:03] WARN    payment-service: heap 820 MB — approaching threshold",
+    "[20:45:04] WARN    payment-service: GC triggered; 0 bytes reclaimed in 1.2 s",
+    "[21:10:44] WARN    payment-service: heap 1100 MB",
+    "[22:15:11] WARN    payment-service: heap 1650 MB — last warning before OOM",
+    "[23:19:55] CRITICAL k8s: pod payment-service-8e2a1f restarted — OOMKilled (exit 137)",
+    "[23:20:09] INFO    payment-service: pod started, memory baseline 308 MB"
+  ],
+  "topology": {
+    "service": "payment-service",
+    "replicas": 2,
+    "dependencies": [
+      { "name": "postgresql-payments", "type": "database" },
+      { "name": "stripe-webhook-forwarder", "type": "internal-proxy" },
+      { "name": "s3-receipts-bucket", "type": "object-storage" }
+    ]
+  },
+  "recent_deploys": [
+    {
+      "version": "v1.8.2",
+      "deployed_at": "2026-09-26T14:45:00Z",
+      "description": "Feature: PDF receipt generation using Pillow for logo embedding",
+      "deployed_by": "ci-pipeline"
+    },
+    {
+      "version": "v1.8.1",
+      "deployed_at": "2026-09-24T10:20:00Z",
+      "description": "Security patch: upgrade cryptography library",
+      "deployed_by": "ci-pipeline"
+    }
+  ],
+  "_ground_truth": {
+    "root_cause": "Memory leak introduced in v1.8.2. receipt_generator.generate_pdf() opens PIL/Pillow Image objects for logo embedding and never closes them. Each transaction leaks approximately 45 KB. At ~360 receipts/hour the heap grows ~16 MB/hour from Image objects alone; additional unreleased BytesIO buffers account for the remaining ~35 MB/hour growth. Python's reference counting does not collect these because they are captured in the receipt cache dict.",
+    "root_cause_file": "payment_service/receipt_generator.py",
+    "root_cause_line": 87,
+    "resolution_steps": [
+      "Option A (immediate): roll back to v1.8.1 to stop the leak.",
+      "Option B (fix forward): In receipt_generator.py line 87, replace `img = Image.open(LOGO_PATH)` with a context manager: `with Image.open(LOGO_PATH) as img:` and move all logo-compositing logic inside the block.",
+      "Also ensure BytesIO buffers created on line 112 are closed after upload to S3: call `buf.close()` after `s3_client.put_object(...)`.",
+      "Verify: deploy the fix, monitor heap for 30 minutes; growth should drop below 2 MB/hour (baseline)."
+    ]
+  }
+}
