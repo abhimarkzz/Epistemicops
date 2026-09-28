@@ -36,3 +36,4 @@ class AgentState(TypedDict):
     events: Annotated[list[AgentEvent], operator.add]
     error: str | None
     postmortem_retained: bool
+    skip_memory: bool

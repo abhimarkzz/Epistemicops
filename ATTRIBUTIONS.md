@@ -9,7 +9,7 @@ This project uses the following open-source libraries and tools.
 | FastAPI | MIT | https://github.com/tiangolo/fastapi |
 | Uvicorn | BSD-3-Clause | https://github.com/encode/uvicorn |
 | LangGraph | MIT | https://github.com/langchain-ai/langgraph |
-| langchain-ollama | MIT | https://github.com/langchain-ai/langchain |
+| langchain-google-genai | MIT | https://github.com/langchain-ai/langchain-google |
 | langchain-core | MIT | https://github.com/langchain-ai/langchain |
 | sse-starlette | BSD-3-Clause | https://github.com/sysid/sse-starlette |
 | httpx | BSD-3-Clause | https://github.com/encode/httpx |
@@ -23,13 +23,16 @@ This project uses the following open-source libraries and tools.
 | React | MIT | https://github.com/facebook/react |
 | Vite | MIT | https://github.com/vitejs/vite |
 | TypeScript | Apache-2.0 | https://github.com/microsoft/TypeScript |
+| Three.js | MIT | https://github.com/mrdoob/three.js |
+| @react-three/fiber | MIT | https://github.com/pmndrs/react-three-fiber |
+| @react-three/drei | MIT | https://github.com/pmndrs/drei |
+| Motion | MIT | https://github.com/motiondivision/motion |
 
 ## AI inference
 
 | Tool | Licence | URL |
 |---|---|---|
-| Ollama | MIT | https://github.com/ollama/ollama |
-| Qwen3 8B | Qwen Research Licence | https://huggingface.co/Qwen/Qwen3-8B |
+| Google Gemini API | Google Terms of Service | https://ai.google.dev |
 
 ## Memory
 

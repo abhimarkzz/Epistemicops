@@ -8,9 +8,18 @@ _ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
 class Settings(BaseSettings):
-    # Ollama
-    ollama_base_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen3:8b"
+    # LLM provider. "gemini" (default) or "groq". Groq is a free-tier option
+    # (recommended by the hackathon) and is selected automatically when a
+    # GROQ_API_KEY is present and no explicit provider is set.
+    llm_provider: str = ""
+
+    # Gemini
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.8-flash"
+
+    # Groq (optional free-tier provider)
+    groq_api_key: str = ""
+    groq_model: str = "openai/gpt-oss-120b"
 
     # Hindsight
     hindsight_base_url: str = "http://127.0.0.1:8888"
@@ -24,12 +33,28 @@ class Settings(BaseSettings):
 
     # Agent behaviour
     max_agent_steps: int = 8
+    # Seconds to wait for a single LLM response before raising TimeoutError
+    llm_timeout: int = 60
 
     model_config = SettingsConfigDict(
         env_file=str(_ENV_FILE),
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def active_provider(self) -> str:
+        """Which LLM provider the agent will use.
+
+        Honors an explicit LLM_PROVIDER; otherwise prefers Groq when a Groq key
+        is configured (so a blocked Gemini key never stalls the live demo), and
+        falls back to Gemini.
+        """
+        explicit = self.llm_provider.strip().lower()
+        if explicit in ("gemini", "groq"):
+            return explicit
+        if self.groq_api_key:
+            return "groq"
+        return "gemini"
 
 
 settings = Settings()

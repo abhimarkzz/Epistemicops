@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "incident_id": "inc-003",
+    "phase": "cold",
+    "description": "Demo Mode — deterministic replay. Cold run: no prior memory, agent analyses from scratch.",
+    "recorded_elapsed_ms": 187400
+  },
+  "events": [
+    {"delay_ms": 0,   "event": "incident_started",        "data": {"incident_id": "inc-003", "title": "5% checkout error spike – orders service", "service": "orders", "severity": "P1"}},
+    {"delay_ms": 600, "event": "memory_query_started",     "data": {"query": "service=orders category=bad_deploy alert: Checkout error rate > 2%"}},
+    {"delay_ms": 900, "event": "memory_result",            "data": {"found": false, "summary": "No prior patterns found."}},
+    {"delay_ms": 400, "event": "tool_started",             "data": {"tool": "get_logs"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_logs", "summary": "47 log line(s) retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_metrics"}},
+    {"delay_ms": 600, "event": "tool_result_summary",      "data": {"tool": "get_metrics", "summary": "4 metric series retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_trace"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_trace", "summary": "12 spans retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_pod_status"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_pod_status", "summary": "3 pod(s) in status."}},
+    {"delay_ms": 500, "event": "diagnosis_started",        "data": {}},
+    {"delay_ms": 174000, "event": "diagnosis_completed",   "data": {
+      "incident_id": "inc-003",
+      "root_cause": "Deployment revision 12 introduced a broken image (rlvr/orders:v2-broken) containing a nil pointer dereference in checkoutHandler. This causes 8% of /checkout requests to return HTTP 500 errors. Pods running revision 12 crash during checkout but the deployment remains active because other paths succeed.",
+      "confidence": 0.91,
+      "status": "completed",
+      "memory_used": false
+    }},
+    {"delay_ms": 400, "event": "memory_retention_started", "data": {"tags": ["orders", "bad_deploy", "postmortem"]}},
+    {"delay_ms": 800, "event": "postmortem_created",       "data": {"success": true}},
+    {"delay_ms": 200, "event": "run_completed",            "data": {"incident_id": "inc-003"}}
+  ]
+}

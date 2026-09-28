@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "incident_id": "inc-004",
+    "phase": "warm",
+    "description": "Demo Mode — deterministic replay. Warm run: prior bad_deploy postmortem (inc-003) is in memory. Agent uses it during analysis.",
+    "recorded_elapsed_ms": 142800
+  },
+  "events": [
+    {"delay_ms": 0,   "event": "incident_started",        "data": {"incident_id": "inc-004", "title": "Shipping service rollout stuck – 0 ready replicas", "service": "shipping", "severity": "P1"}},
+    {"delay_ms": 600, "event": "memory_query_started",     "data": {"query": "service=shipping category=bad_deploy alert: Shipping rollout stuck – 0/3 pods ready"}},
+    {"delay_ms": 1100, "event": "memory_result",           "data": {
+      "found": true,
+      "summary": "Prior bad deploy pattern (orders, 2026-09-26): revision introduced broken image → nil pointer dereference → HTTP 500 on checkout. Resolution: kubectl rollout undo. Approved postmortem on record."
+    }},
+    {"delay_ms": 400, "event": "tool_started",             "data": {"tool": "get_logs"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_logs", "summary": "38 log line(s) retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_metrics"}},
+    {"delay_ms": 600, "event": "tool_result_summary",      "data": {"tool": "get_metrics", "summary": "4 metric series retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_trace"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_trace", "summary": "0 spans retrieved."}},
+    {"delay_ms": 300, "event": "tool_started",             "data": {"tool": "get_pod_status"}},
+    {"delay_ms": 700, "event": "tool_result_summary",      "data": {"tool": "get_pod_status", "summary": "3 pod(s) in status."}},
+    {"delay_ms": 500, "event": "diagnosis_started",        "data": {}},
+    {"delay_ms": 130000, "event": "diagnosis_completed",   "data": {
+      "incident_id": "inc-004",
+      "root_cause": "Deployment revision 8 specified a non-existent image tag (rlvr/shipping:v99-nonexistent). All new pods are stuck in ImagePullBackOff / ErrImagePull because the registry returns 'manifest unknown'. The rollout exceeded progressDeadlineSeconds and is permanently wedged (ProgressDeadlineExceeded). Prior pattern from orders service (inc-003) confirms this is a bad_deploy category — rollback resolves.",
+      "confidence": 0.95,
+      "status": "completed",
+      "memory_used": true
+    }},
+    {"delay_ms": 400, "event": "memory_retention_started", "data": {"tags": ["shipping", "bad_deploy", "postmortem"]}},
+    {"delay_ms": 800, "event": "postmortem_created",       "data": {"success": true}},
+    {"delay_ms": 200, "event": "run_completed",            "data": {"incident_id": "inc-004"}}
+  ]
+}

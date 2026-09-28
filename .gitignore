@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+.venv-hindsight/
 *.egg-info/
 build/
 dist/
@@ -41,3 +42,6 @@ Thumbs.db
 # ── Misc ──────────────────────────────────────────────────────────────────────
 *.tmp
 scratch/
+
+# Local editor/agent config (not part of the project)
+.claude/

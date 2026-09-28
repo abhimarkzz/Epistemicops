@@ -143,6 +143,25 @@ def _build_postmortem_text(
     return "\n".join(lines)
 
 
+def _format_recall(results: list[Any], top_n: int = 3) -> str:
+    """Turn Hindsight recall results into a compact context string for the agent.
+
+    Keeps the highest-scoring memory texts, de-duplicated, so the diagnosis prompt
+    gets concrete prior-incident patterns without any LLM synthesis step.
+    """
+    seen: set[str] = set()
+    lines: list[str] = []
+    for item in results:
+        text = (getattr(item, "text", None) or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        lines.append(f"- {text}")
+        if len(lines) >= top_n:
+            break
+    return "\n".join(lines)
+
+
 def _trust_level(
     approvals: list[PostmortemRecord],
     answer_found: bool,
@@ -211,13 +230,13 @@ class MemoryService:
             )
             result["bank"] = "confirmed"
 
-            # Check if our mental model already exists
+            # Probe for the mental model; a 404 here means we need to create it.
             mm_id = settings.hindsight_mental_model_id
             try:
-                existing = await client.aget_mental_model(
+                await client.aget_mental_model(
                     settings.hindsight_bank_id, mm_id, detail="metadata"
                 )
-                # Update trigger to enable delta + refresh_after_consolidation
+                # Existing model: refresh its trigger to enable delta consolidation.
                 await client.aupdate_mental_model(
                     settings.hindsight_bank_id,
                     mm_id,
@@ -308,18 +327,22 @@ class MemoryService:
     # ── query ──────────────────────────────────────────────────────────────────
 
     async def query_memory(self, query: str) -> MemoryQueryResult:
-        """Reflect on the Hindsight bank for patterns matching query.
+        """Recall prior incident patterns from the Hindsight bank.
 
-        Returns the answer plus a trust_level based on local approval state.
+        Uses semantic recall (vector search) rather than agentic reflection: it is
+        the right primitive for "find similar past incidents," needs no LLM call,
+        and therefore stays fast and free of provider rate limits. Returns the
+        recalled memory text plus a trust_level based on local approval state.
         """
         client = _client()
         try:
-            response = await client.areflect(
+            response = await client.arecall(
                 bank_id=settings.hindsight_bank_id,
                 query=query,
                 budget="low",
+                max_tokens=1024,
             )
-            answer = (getattr(response, "answer", None) or "").strip()
+            answer = _format_recall(getattr(response, "results", None) or [])
             found = bool(answer)
         except Exception as exc:
             logger.warning("Hindsight query_memory failed: %s", exc)
@@ -442,6 +465,26 @@ class MemoryService:
     def get_pending(self) -> list[PostmortemRecord]:
         return [r for r in self._store.all() if r.approval_status == ApprovalStatus.pending]
 
+    async def reset_bank(self) -> None:
+        """Delete and recreate the EpistemicOps Hindsight bank, then wipe the approval store.
+
+        Only the bank identified by settings.hindsight_bank_id is affected.
+        """
+        client = _client()
+        try:
+            try:
+                await client.adelete_bank(settings.hindsight_bank_id)
+                logger.info("Deleted Hindsight bank %s", settings.hindsight_bank_id)
+            except Exception as exc:
+                logger.warning("Bank delete failed (may not exist): %s", exc)
+            # Recreate via initialize
+            await self.initialize()
+        finally:
+            await client.aclose()
+        # Clear local approval store
+        self._store._save({"postmortems": {}})
+        logger.info("Approval store cleared.")
+
 
 # ── singleton ──────────────────────────────────────────────────────────────────
 
@@ -455,14 +498,6 @@ def get_memory_service() -> MemoryService:
     """
     global _instance
     if _instance is None:
-        from app.config import settings
-
-        state_file = (
-            Path(settings.__class__.__module__.replace(".", "/")).parent.parent.parent
-            / "data"
-            / "memory_state.json"
-        )
-        # Resolve relative to the project root reliably
         state_file = Path(__file__).parent.parent.parent.parent / "data" / "memory_state.json"
         _instance = MemoryService(state_file)
     return _instance

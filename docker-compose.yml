@@ -6,12 +6,14 @@ services:
       - "8888:8888"   # REST API
       - "9999:9999"   # Web UI / control plane
     environment:
-      # Tell Hindsight to use the Ollama instance running on the Docker host.
-      # host.docker.internal resolves to the host on Mac; the extra_hosts
-      # entry below makes the same name work on Linux.
-      HINDSIGHT_API_LLM_PROVIDER: ollama
-      HINDSIGHT_API_LLM_BASE_URL: http://host.docker.internal:11434/v1
-      HINDSIGHT_API_LLM_MODEL: qwen3:8b
+      # LLM Hindsight uses for fact extraction, reflect, and consolidation.
+      # Defaults to Groq (free tier) with GROQ_API_KEY from your environment/.env,
+      # so recall/consolidation work without a paid or quota-limited key.
+      # To use Gemini instead: HINDSIGHT_LLM_PROVIDER=gemini,
+      # HINDSIGHT_LLM_MODEL=gemini-3.8-flash, HINDSIGHT_LLM_API_KEY=${GEMINI_API_KEY}.
+      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_LLM_PROVIDER:-groq}
+      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_LLM_MODEL:-openai/gpt-oss-120b}
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_LLM_API_KEY:-${GROQ_API_KEY}}
       HINDSIGHT_API_LLM_MAX_CONCURRENT: "1"
       # Observations must be enabled: the project relies on consolidation
       # and Mental Models for the warm-incident learning loop.
@@ -19,8 +21,6 @@ services:
     volumes:
       # Hindsight stores its embedded database here.
       - hindsight_data:/home/hindsight/.pg0
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
 volumes:

@@ -18,7 +18,8 @@ def test_health_body():
     assert body["status"] == "ok"
     assert body["service"] == "epistemicops-backend"
     assert "services" in body
-    assert "ollama" in body["services"]
+    assert "llm" in body["services"]
+    assert body["services"]["llm"]["provider"] in ("gemini", "groq")
     assert "hindsight" in body["services"]
 
 

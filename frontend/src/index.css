@@ -1,53 +1,159 @@
+/* EpistemicOps — Dark Observability Command Center
+   Design tokens + base styles. Every token maps to a product concept. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-  --bg-base:      #0b0b10;
-  --bg-panel:     #11111a;
-  --bg-hover:     #18182a;
-  --bg-selected:  #1c1c32;
-  --border:       #22223a;
-  --border-strong:#303050;
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --bg:           #070A0F;
+  --surface:      #0D1118;
+  --surface-2:    #111722;
+  --surface-3:    #161D2A;
+  --surface-hover: #1A2233;
+  --surface-active: #1E2840;
 
-  --text-primary:  #dde0f0;
-  --text-secondary:#8a8aaa;
-  --text-muted:    #4a4a6a;
-  --text-code:     #a6e3a1;
+  /* Legacy aliases for existing components */
+  --canvas:        var(--bg);
+  --surface-subtle: var(--surface-2);
 
-  --accent-green:  #50fa7b;
-  --accent-blue:   #8be9fd;
-  --accent-purple: #bd93f9;
-  --accent-yellow: #f1fa8c;
-  --accent-orange: #ffb86c;
-  --accent-red:    #ff5555;
-  --accent-pink:   #ff79c6;
+  /* ── Borders ──────────────────────────────────────────────── */
+  --border:        #1E2733;
+  --border-strong:  #2A3545;
+  --border-focus:   #6366F1;
 
-  --sev-p1: #ff5555;
-  --sev-p2: #ffb86c;
-  --sev-p3: #f1fa8c;
-  --sev-p4: #50fa7b;
+  /* ── Text ─────────────────────────────────────────────────── */
+  --text:           #F5F7FA;
+  --text-secondary: #9AA6B2;
+  --text-muted:     #667384;
+  --text-inverse:   #070A0F;
 
-  --font-ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  /* ── Brand ───────────────────────────────────────────────── */
+  --indigo:        #6366F1;
+  --indigo-hover:  #5558E3;
+  --indigo-subtle: rgba(99, 102, 241, 0.10);
+  --indigo-glow:   rgba(99, 102, 241, 0.25);
+  --cyan:          #22D3EE;
+  --cyan-subtle:   rgba(34, 211, 238, 0.10);
 
-  --radius:    4px;
-  --radius-lg: 8px;
+  /* Legacy alias */
+  --accent:        var(--indigo);
+  --accent-hover:  var(--indigo-hover);
+  --accent-subtle: var(--indigo-subtle);
+
+  /* ── Operational ──────────────────────────────────────────── */
+  --success:       #22C55E;
+  --success-subtle: rgba(34, 197, 94, 0.10);
+  --warning:       #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.10);
+  --danger:        #EF4444;
+  --danger-subtle: rgba(239, 68, 68, 0.10);
+  --info:          #38BDF8;
+  --info-subtle:   rgba(56, 189, 248, 0.10);
+  --memory:        #A78BFA;
+  --memory-subtle: rgba(167, 139, 250, 0.10);
+
+  /* ── Severity ────────────────────────────────────────────── */
+  --sev-critical:  var(--danger);
+  --sev-high:      var(--warning);
+  --sev-medium:    var(--info);
+  --sev-low:       var(--text-muted);
+
+  /* ── Spacing (4px base) ──────────────────────────────────── */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 40px; --s8: 48px; --s9: 64px;
+
+  /* ── Radius ───────────────────────────────────────────────── */
+  --r-control: 6px;
+  --r-panel:   8px;
+  --r-pill:    999px;
+
+  /* ── Elevation ───────────────────────────────────────────── */
+  --shadow-pop: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.2);
+  --shadow-dialog: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(99, 102, 241, 0.15);
+  --shadow-glow-indigo: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-glow-cyan:   0 0 20px rgba(34, 211, 238, 0.1);
+
+  /* ── Typography ───────────────────────────────────────────── */
+  --font-ui:   "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+
+  --t-title:   20px;
+  --t-section: 14px;
+  --t-body:    13px;
+  --t-meta:    12px;
+  --t-micro:   11px;
+
+  /* ── Motion ───────────────────────────────────────────────── */
+  --ease:     cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur:      140ms;
+  --dur-slow: 240ms;
+  --dur-fast: 80ms;
+
+  /* ── Z-index ──────────────────────────────────────────────── */
+  --z-base:     1;
+  --z-sticky:   10;
+  --z-dropdown: 20;
+  --z-drawer:   30;
+  --z-overlay:  40;
+  --z-dialog:   50;
+  --z-toast:    60;
+
+  /* ── Layout ───────────────────────────────────────────────── */
+  --sidebar-w: 220px;
+  --list-w:    300px;
+  --memory-w:  340px;
+  --topbar-h:  48px;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body, #root {
-  height: 100%;
-  width: 100%;
-}
+/* ── Base resets ────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
 
 body {
-  background: var(--bg-base);
-  color: var(--text-primary);
+  margin: 0;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--t-body);
   line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #505070; }
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+/* ── Focus ─────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+  border-radius: var(--r-control);
+}
+
+::selection { background: var(--indigo-subtle); color: var(--text); }
+
+/* ── Scrollbars ────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

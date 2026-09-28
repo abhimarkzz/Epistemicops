@@ -4,18 +4,20 @@ Flow: load_incident → query_memory → investigate → analyze → validate
       → produce_result → retain_postmortem → END
 
 Any node that sets state["error"] is immediately routed to error_end → END.
-The LLM is injected so tests can substitute a mock without touching Ollama.
+The LLM is injected so tests can substitute a mock without calling Gemini.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from typing import Any, AsyncGenerator
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 
 from app.config import settings
@@ -36,10 +38,22 @@ HIDDEN_GT_FIELDS = {
 
 
 def _make_default_llm() -> BaseChatModel:
-    return ChatOllama(
-        model=settings.ollama_model,
-        base_url=settings.ollama_base_url,
-        format="json",
+    """Build the diagnosis LLM for the configured provider.
+
+    Groq (free tier) is used when selected/configured; Gemini is the default.
+    Both are swapped for a mock in tests, so neither key is needed to run the suite.
+    """
+    if settings.active_provider() == "groq":
+        from langchain_groq import ChatGroq
+
+        return ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+            temperature=0,
+        )
+    return ChatGoogleGenerativeAI(
+        model=settings.gemini_model,
+        google_api_key=settings.gemini_api_key,
         temperature=0,
     )
 
@@ -122,6 +136,11 @@ def _node_load_incident(fixture_svc: FixtureService):
 
 def _node_query_memory():
     async def node(state: AgentState) -> dict:
+        if state.get("skip_memory", False):
+            return {
+                "memory_context": None,
+                "events": [AgentEvent(event="memory_skipped", data={"reason": "baseline mode"})],
+            }
         incident = state["incident"]
         alert = incident.get("alert") or {}
         query = (
@@ -177,13 +196,15 @@ def _node_investigate(fixture_svc: FixtureService):
                     "events": events + [AgentEvent(event="run_failed", data={"error": err})],
                 }
 
+        # Signal that evidence collection is done and the LLM is next.
+        events.append(AgentEvent(event="diagnosis_started", data={}))
         return {"tool_results": results, "tool_call_names": new_tool_calls, "events": events}
     return node
 
 
 def _node_analyze(llm: BaseChatModel):
     async def node(state: AgentState) -> dict:
-        events: list[AgentEvent] = [AgentEvent(event="diagnosis_started", data={})]
+        events: list[AgentEvent] = []
         prompt = build_analysis_prompt(
             state["incident"],
             state.get("memory_context"),
@@ -191,9 +212,28 @@ def _node_analyze(llm: BaseChatModel):
         )
         messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)]
         try:
-            response = await llm.ainvoke(messages)
-            raw = response.content if hasattr(response, "content") else str(response)
+            response = await asyncio.wait_for(
+                llm.ainvoke(messages),
+                timeout=settings.llm_timeout,
+            )
+            content = response.content if hasattr(response, "content") else str(response)
+            # Gemini 3.x returns structured content blocks (list of dicts with 'text' key).
+            # Extract and join all text blocks; non-text blocks (thinking signatures) are skipped.
+            if isinstance(content, list):
+                raw = " ".join(
+                    b["text"] for b in content
+                    if isinstance(b, dict) and b.get("type") == "text" and b.get("text")
+                )
+            else:
+                raw = content
             return {"llm_analysis": raw, "events": events}
+        except asyncio.TimeoutError:
+            model = settings.groq_model if settings.active_provider() == "groq" else settings.gemini_model
+            err = f"LLM call timed out after {settings.llm_timeout}s (model: {model})"
+            return {
+                "error": err,
+                "events": events + [AgentEvent(event="run_failed", data={"error": err})],
+            }
         except Exception as exc:
             err = f"LLM call failed: {exc}"
             return {
@@ -238,9 +278,12 @@ def _node_produce_result(state: AgentState) -> dict:
                 data={
                     "incident_id": diagnosis.incident_id,
                     "root_cause": diagnosis.root_cause,
+                    "evidence": diagnosis.evidence,
+                    "recommended_remediation": diagnosis.recommended_remediation,
                     "confidence": diagnosis.confidence,
                     "status": diagnosis.status,
                     "memory_used": diagnosis.memory_used,
+                    "tool_calls": diagnosis.tool_calls,
                 },
             )
         ]
@@ -326,8 +369,17 @@ async def run_investigation(
     incident_id: str,
     fixture_svc: FixtureService,
     llm: BaseChatModel | None = None,
+    skip_memory: bool = False,
+    recursion_limit: int | None = None,
 ) -> AsyncGenerator[AgentEvent, None]:
-    """Run the investigation state machine and yield UI events as they occur."""
+    """Run the investigation state machine and yield UI events as they occur.
+
+    The graph is a bounded acyclic DAG, so it always terminates. As a defensive
+    hard cap, LangGraph's recursion_limit is set from settings.max_agent_steps;
+    if the graph ever exceeds it, GraphRecursionError is caught and surfaced as
+    a run_failed event rather than propagating.
+    """
+    limit = recursion_limit if recursion_limit is not None else settings.max_agent_steps
     graph = build_graph(fixture_svc, llm)
     initial: AgentState = {
         "incident_id": incident_id,
@@ -340,10 +392,19 @@ async def run_investigation(
         "events": [],
         "error": None,
         "postmortem_retained": False,
+        "skip_memory": skip_memory,
     }
-    async for updates in graph.astream(initial, stream_mode="updates"):
-        for node_updates in updates.values():
-            if not node_updates:
-                continue
-            for event in node_updates.get("events", []):
-                yield event
+    try:
+        async for updates in graph.astream(
+            initial,
+            stream_mode="updates",
+            config={"recursion_limit": limit},
+        ):
+            for node_updates in updates.values():
+                if not node_updates:
+                    continue
+                for event in node_updates.get("events", []):
+                    yield event
+    except GraphRecursionError:
+        err = f"Agent exceeded step limit ({limit}); terminated to prevent a stall."
+        yield AgentEvent(event="run_failed", data={"error": err})

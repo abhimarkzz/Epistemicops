@@ -3,11 +3,17 @@ import type {
   HealthInfo,
   Incident,
   MemoryStatus,
+  RunComparison,
+  RunMode,
+  RunRecord,
   RunbookStatus,
   StreamEvent,
 } from "./types";
 
-const BASE = "";
+// In dev/preview mode the Vite proxy handles relative URLs (BASE="").
+// For a standalone production deployment set VITE_API_BASE_URL to the
+// backend origin, e.g. http://my-server:8000
+const BASE: string = import.meta.env.VITE_API_BASE_URL ?? "";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
@@ -39,6 +45,18 @@ async function put<T>(path: string, body: unknown): Promise<T> {
 
 export const fetchHealth = () => get<HealthInfo>("/health");
 export const fetchIncidents = () => get<Incident[]>("/api/incidents");
+export const fetchDemoIncidents = () => get<string[]>("/api/demo/incidents");
+
+// ── Evidence (read-only fixture data for the Evidence tabs) ─────────────────────
+
+export const fetchIncidentLogs = (id: string) =>
+  get<string[]>(`/api/incidents/${id}/logs`);
+export const fetchIncidentMetrics = (id: string) =>
+  get<Record<string, unknown>>(`/api/incidents/${id}/metrics`);
+export const fetchIncidentTrace = (id: string) =>
+  get<unknown>(`/api/incidents/${id}/trace`);
+export const fetchIncidentPods = (id: string) =>
+  get<unknown>(`/api/incidents/${id}/pods`);
 export const fetchMemoryStatus = () => get<MemoryStatus>("/api/memory/status");
 export const fetchRunbook = () => get<RunbookStatus>("/api/memory/runbook");
 export const triggerRunbookRefresh = () =>
@@ -50,16 +68,36 @@ export const setApproval = (incidentId: string, status: ApprovalStatus) =>
     { status }
   );
 
+// ── Run store / Learning loop ──────────────────────────────────────────────────
+
+export const fetchRuns = (limit = 20) =>
+  get<RunRecord[]>(`/api/runs?limit=${limit}`);
+
+export const fetchRun = (runId: string) =>
+  get<RunRecord>(`/api/runs/${runId}`);
+
+export const compareRuns = (runIdA: string, runIdB: string) =>
+  post<RunComparison>("/api/runs/compare", { run_id_a: runIdA, run_id_b: runIdB });
+
+export const resetMemoryBank = () => {
+  return fetch("/api/memory/bank", { method: "DELETE" }).then((r) => {
+    if (!r.ok) throw new Error(`DELETE /api/memory/bank → ${r.status}`);
+    return r.json();
+  });
+};
+
 // ── SSE streaming ──────────────────────────────────────────────────────────────
 
 export async function streamInvestigation(
   incidentId: string,
   signal: AbortSignal,
-  onEvent: (event: StreamEvent) => void
+  onEvent: (event: StreamEvent) => void,
+  mode: RunMode = "live"
 ): Promise<void> {
+  const params = mode === "baseline" ? "?baseline=true" : mode === "demo" ? "?demo=true" : "";
   let response: Response;
   try {
-    response = await fetch(`/api/investigate/${incidentId}`, {
+    response = await fetch(`/api/investigate/${incidentId}${params}`, {
       method: "POST",
       signal,
       headers: { Accept: "text/event-stream" },

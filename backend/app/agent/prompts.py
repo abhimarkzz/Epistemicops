@@ -15,7 +15,9 @@ SYSTEM_PROMPT = (
     "You are an expert SRE investigating a production incident. "
     "Analyze the evidence provided and identify the root cause. "
     "Base every conclusion strictly on the evidence given — do not guess. "
-    "Respond with valid JSON only; no prose, no markdown fences."
+    "YOUR ENTIRE RESPONSE MUST BE A SINGLE VALID JSON OBJECT. "
+    "Do not include any text, explanation, or markdown before or after the JSON. "
+    "Do not wrap the JSON in code fences. Output only the raw JSON object."
 )
 
 

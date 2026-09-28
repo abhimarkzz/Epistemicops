@@ -130,6 +130,10 @@ def create_mental_model(client: httpx.Client) -> None:
     existing_id = _find_existing_model(client)
     if existing_id:
         print(f"  Mental Model already exists (id={existing_id}). Skipping creation.")
+        # Reconcile backend/.env if it still points at a different (e.g. placeholder) id,
+        # so the backend queries the id Hindsight actually assigned.
+        if existing_id != MODEL_ID:
+            _update_env_model_id(existing_id)
         return
 
     # Try PUT first (upsert with explicit id); fall back to POST if not supported.

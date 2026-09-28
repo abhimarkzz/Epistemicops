@@ -1,7 +1,7 @@
 """
 Tests for the LangGraph investigation agent.
 
-All tests are Ollama-independent: the LLM is replaced with a mock that returns
+All tests are LLM-independent: the LLM is replaced with a mock that returns
 preset JSON.  Hindsight memory functions are patched at the module level.
 
 Coverage:
@@ -370,3 +370,85 @@ def test_real_fixture_inc003_happy_path():
     events = asyncio.run(_run("inc-003", svc))
     assert any(e.event == "run_completed" for e in events)
     assert not any(e.event == "run_failed" for e in events)
+
+
+# ── 11. Step-limit (recursion_limit) enforcement ─────────────────────────────
+
+def _run_with_limit(incident_id: str, svc: FixtureService, limit: int) -> list[AgentEvent]:
+    events: list[AgentEvent] = []
+
+    async def go():
+        with (
+            patch("app.agent.graph.query_incident_patterns", AsyncMock(return_value="")),
+            patch("app.agent.graph.retain_incident_full", AsyncMock(return_value=True)),
+        ):
+            async for ev in run_investigation(
+                incident_id, svc, _mock_llm(), recursion_limit=limit
+            ):
+                events.append(ev)
+
+    asyncio.run(go())
+    return events
+
+
+def test_default_step_limit_allows_full_run():
+    """The 7-node acyclic graph completes within the default MAX_AGENT_STEPS cap."""
+    from app.config import settings
+    svc = _make_svc(_INCIDENT)
+    events = _run_with_limit("inc-t01", svc, settings.max_agent_steps)
+    assert events[-1].event == "run_completed"
+    assert not any(e.event == "run_failed" for e in events)
+
+
+def test_too_low_step_limit_emits_run_failed():
+    """A recursion_limit below the graph depth aborts gracefully with run_failed."""
+    svc = _make_svc(_INCIDENT)
+    events = _run_with_limit("inc-t01", svc, 1)
+    assert any(e.event == "run_failed" for e in events)
+    assert not any(e.event == "run_completed" for e in events)
+
+
+def test_too_low_step_limit_error_mentions_step_limit():
+    svc = _make_svc(_INCIDENT)
+    events = _run_with_limit("inc-t01", svc, 1)
+    failed = next(e for e in events if e.event == "run_failed")
+    assert "step limit" in failed.data.get("error", "").lower()
+
+
+# ── 12. Recalled memory reaches the diagnosis prompt (warm path) ─────────────
+
+def _capture_prompt(incident_id: str, svc: FixtureService, memory_context: str) -> str:
+    captured: list[str] = []
+
+    async def spy_ainvoke(messages, **_):
+        captured.extend(m.content for m in messages if hasattr(m, "content"))
+        return AIMessage(content=_VALID_LLM_RESPONSE)
+
+    llm = MagicMock()
+    llm.ainvoke = spy_ainvoke
+
+    async def go():
+        with (
+            patch("app.agent.graph.query_incident_patterns", AsyncMock(return_value=memory_context)),
+            patch("app.agent.graph.retain_incident_full", AsyncMock(return_value=True)),
+        ):
+            async for _ in run_investigation(incident_id, svc, llm):
+                pass
+
+    asyncio.run(go())
+    return "\n".join(captured)
+
+
+def test_recalled_memory_enters_prompt_on_warm_run():
+    """A non-empty Hindsight recall must be injected into the LLM prompt."""
+    svc = _make_svc(_INCIDENT)
+    marker = "PRIOR-INCIDENT-inc-XYZ connection pool exhaustion fixed by index"
+    prompt = _capture_prompt("inc-t01", svc, memory_context=marker)
+    assert marker in prompt
+
+
+def test_no_memory_marker_when_recall_empty():
+    """With no recall, the prior-patterns block must not appear."""
+    svc = _make_svc(_INCIDENT)
+    prompt = _capture_prompt("inc-t01", svc, memory_context="")
+    assert "PRIOR INCIDENT PATTERNS" not in prompt

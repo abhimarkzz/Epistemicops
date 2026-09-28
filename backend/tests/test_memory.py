@@ -306,18 +306,19 @@ async def _query(svc, client, query="bad_deploy payment-service"):
         return await svc.query_memory(query)
 
 
-def _reflect_client(answer="Rollback the bad deploy."):
+def _recall_client(*texts):
+    """Mock a Hindsight client whose arecall returns memories with the given texts."""
     resp = MagicMock()
-    resp.answer = answer
+    resp.results = [MagicMock(text=t) for t in texts]
     client = MagicMock()
-    client.areflect = AsyncMock(return_value=resp)
+    client.arecall = AsyncMock(return_value=resp)
     client.aclose = AsyncMock()
     return client
 
 
 def test_query_memory_returns_answer(tmp_path):
     svc = _make_service(tmp_path)
-    client = _reflect_client("Rollback the bad deploy.")
+    client = _recall_client("Rollback the bad deploy.")
     result = asyncio.run(_query(svc, client))
     assert result.found is True
     assert "Rollback" in result.answer
@@ -325,7 +326,7 @@ def test_query_memory_returns_answer(tmp_path):
 
 def test_query_memory_empty_answer(tmp_path):
     svc = _make_service(tmp_path)
-    client = _reflect_client("")
+    client = _recall_client()  # no memories recalled
     result = asyncio.run(_query(svc, client))
     assert result.found is False
     assert result.trust_level == "empty"
@@ -342,7 +343,7 @@ def test_query_memory_trust_level_pending(tmp_path):
         document_id="inc-m01",
     )
     svc._store.upsert(record)
-    client = _reflect_client("Some answer")
+    client = _recall_client("Some answer")
     result = asyncio.run(_query(svc, client))
     assert result.trust_level == "pending"
     assert result.pending_count == 1
@@ -359,7 +360,7 @@ def test_query_memory_trust_level_approved(tmp_path):
         document_id="inc-m01",
     )
     svc._store.upsert(record)
-    client = _reflect_client("Some answer")
+    client = _recall_client("Some answer")
     result = asyncio.run(_query(svc, client))
     assert result.trust_level == "approved"
 
@@ -367,7 +368,7 @@ def test_query_memory_trust_level_approved(tmp_path):
 def test_query_memory_hindsight_unavailable(tmp_path):
     svc = _make_service(tmp_path)
     client = MagicMock()
-    client.areflect = AsyncMock(side_effect=Exception("connection refused"))
+    client.arecall = AsyncMock(side_effect=Exception("connection refused"))
     client.aclose = AsyncMock()
     result = asyncio.run(_query(svc, client))
     assert result.found is False
