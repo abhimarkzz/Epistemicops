@@ -19,22 +19,18 @@ export HINDSIGHT_API_LLM_MAX_CONCURRENT="1"
 export HINDSIGHT_API_ENABLE_OBSERVATIONS="true"
 export HINDSIGHT_API_LLM_GROQ_SERVICE_TIER="on_demand"
 # Embeddings and Reranker providers for Hindsight
-# Configured for remote Google/Gemini embeddings and RRF reranking (lightweight, zero local neural models)
-export HINDSIGHT_API_EMBEDDINGS_PROVIDER="${HINDSIGHT_API_EMBEDDINGS_PROVIDER:-google}"
-if [ "${HINDSIGHT_API_EMBEDDINGS_PROVIDER}" = "gemini" ]; then
-    export HINDSIGHT_API_EMBEDDINGS_PROVIDER="google"
-fi
-export HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL="${HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL:-gemini-embedding-001}"
-export HINDSIGHT_API_RERANKER_PROVIDER="${HINDSIGHT_API_RERANKER_PROVIDER:-rrf}"
-if [ "${HINDSIGHT_API_RERANKER_PROVIDER}" = "none" ] || [ -z "${HINDSIGHT_API_RERANKER_PROVIDER}" ]; then
-    export HINDSIGHT_API_RERANKER_PROVIDER="rrf"
-fi
-export HINDSIGHT_API_MODEL_INIT_TIMEOUT="1200"
+# Configured for local ONNX multilingual-e5-small embeddings and RRF reranking (no external embedding API)
+export HINDSIGHT_API_EMBEDDINGS_PROVIDER="onnx"
+export HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID="intfloat/multilingual-e5-small"
+export HINDSIGHT_API_EMBEDDINGS_ONNX_FILE="onnx/model.onnx"
+export HINDSIGHT_API_EMBEDDINGS_ONNX_DIMENSIONS="384"
+export HINDSIGHT_API_EMBEDDINGS_ONNX_QUERY_PREFIX="query: "
+export HINDSIGHT_API_EMBEDDINGS_ONNX_PASSAGE_PREFIX="passage: "
+export HINDSIGHT_API_EMBEDDINGS_ONNX_BATCH_SIZE="${HINDSIGHT_API_EMBEDDINGS_ONNX_BATCH_SIZE:-8}"
+export HINDSIGHT_API_EMBEDDINGS_ONNX_CPU_MEM_ARENA="${HINDSIGHT_API_EMBEDDINGS_ONNX_CPU_MEM_ARENA:-false}"
 
-# Explicitly pass GEMINI_API_KEY to Hindsight's dedicated embedding key variable
-if [ -n "${GEMINI_API_KEY:-}" ]; then
-    export HINDSIGHT_API_EMBEDDINGS_GEMINI_API_KEY="${HINDSIGHT_API_EMBEDDINGS_GEMINI_API_KEY:-$GEMINI_API_KEY}"
-fi
+export HINDSIGHT_API_RERANKER_PROVIDER="rrf"
+export HINDSIGHT_API_MODEL_INIT_TIMEOUT="1200"
 
 # External Database (Neon / Supabase Postgres with pgvector for persistent memory)
 if [ -n "${DATABASE_URL:-}" ] && [ -z "${HINDSIGHT_API_DATABASE_URL:-}" ]; then
@@ -49,7 +45,7 @@ fi
 
 # 1. Start Hindsight in background
 echo "[*] Launching Hindsight Vector Memory Service on port ${HINDSIGHT_PORT}..."
-echo "[*] Hindsight Settings: Embeddings=${HINDSIGHT_API_EMBEDDINGS_PROVIDER} (model=${HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL}), Reranker=${HINDSIGHT_API_RERANKER_PROVIDER}"
+echo "[*] Hindsight Settings: Embeddings=${HINDSIGHT_API_EMBEDDINGS_PROVIDER} (model=${HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID}, dim=${HINDSIGHT_API_EMBEDDINGS_ONNX_DIMENSIONS}), Reranker=${HINDSIGHT_API_RERANKER_PROVIDER}"
 hindsight-api --port "$HINDSIGHT_PORT" &
 HINDSIGHT_PID=$!
 

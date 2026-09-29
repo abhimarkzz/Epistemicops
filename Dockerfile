@@ -33,17 +33,23 @@ ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PORT=7860 \
-    HINDSIGHT_API_EMBEDDINGS_PROVIDER=google \
-    HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001 \
+    HINDSIGHT_API_EMBEDDINGS_PROVIDER=onnx \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID=intfloat/multilingual-e5-small \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_FILE=onnx/model.onnx \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_DIMENSIONS=384 \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_QUERY_PREFIX="query: " \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_PASSAGE_PREFIX="passage: " \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_BATCH_SIZE=8 \
+    HINDSIGHT_API_EMBEDDINGS_ONNX_CPU_MEM_ARENA=false \
     HINDSIGHT_API_RERANKER_PROVIDER=rrf
 
 WORKDIR /app
 
-# Install Python dependencies as user (explicitly pinned Hindsight version)
+# Install Python dependencies as user (explicitly pinned Hindsight version with local-onnx)
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/backend/requirements.txt && \
-    pip install --no-cache-dir 'hindsight-api-slim[embedded-db]==0.10.1' psycopg2-binary
+    pip install --no-cache-dir 'hindsight-api-slim[embedded-db,local-onnx]==0.10.1' psycopg2-binary
 
 # Copy application code
 COPY backend/ /app/backend/

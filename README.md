@@ -592,11 +592,11 @@ EpistemicOps can be deployed as a publicly accessible demo web application with 
 - **Sign Up:** GitHub account only. **Zero payment info or credit card requested.**
 - **Cost:** 100% Free Forever ($0.00).
 - **Persistent Memory:** Hindsight vector memories and runbooks are stored in a free [Neon](https://neon.tech/) PostgreSQL database (`pgvector`), surviving container restarts without Render's 30-day expiration window.
-- **Slim Cloud Embeddings:** Runs under Render's 512 MB RAM ceiling (~205 MB stack RSS) by configuring Hindsight for remote Gemini embeddings (`gemini-embedding-001` or `gemini-embedding-2`), replacing 673 MB of local ONNX and FlashRank neural models.
+- **Local ONNX Embeddings + RRF:** Uses local ONNX `multilingual-e5-small` embeddings and `rrf` passthrough reranker, eliminating external embedding API dependencies and bypassing project quota/permission issues.
 - **Fast Setup (5 minutes):**
   1. Create a free database at [neon.tech](https://neon.tech/) and run `CREATE EXTENSION IF NOT EXISTS vector;`.
   2. Create a free Web Service on [render.com](https://render.com/) from your GitHub repository using environment **Docker**.
-  3. Set Environment Variables: `PORT=8000`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `HINDSIGHT_API_EMBEDDINGS_PROVIDER=google`, `HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001`, `HINDSIGHT_API_RERANKER_PROVIDER=rrf`, and `HINDSIGHT_API_DATABASE_URL` (your Neon connection string).
+  3. Set Environment Variables: `PORT=8000`, `GROQ_API_KEY`, `HINDSIGHT_API_EMBEDDINGS_PROVIDER=onnx`, `HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID=intfloat/multilingual-e5-small`, `HINDSIGHT_API_RERANKER_PROVIDER=rrf`, and `HINDSIGHT_API_DATABASE_URL` (your Neon connection string).
   4. Render builds and launches your public application with free automatic HTTPS!
 - **Detailed Step-by-Step Guide:** See [docs/NO_CARD_DEPLOYMENT.md](docs/NO_CARD_DEPLOYMENT.md).
 
