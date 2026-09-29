@@ -153,3 +153,36 @@ def test_demo_banner_incident_matches_request(client):
     with patch("app.main.asyncio.sleep", AsyncMock()):
         events = _events(client, "/api/investigate/inc-003?demo=true")
     assert events[0]["data"]["incident_id"] == "inc-003"
+
+
+def test_reset_memory_bank_public_disabled(client):
+    with (
+        patch("app.main.settings.allow_public_reset", False),
+        patch("app.main.settings.admin_token", "secret123"),
+    ):
+        # without token -> 403
+        resp = client.delete("/api/memory/bank")
+        assert resp.status_code == 403
+        assert "Admin token required" in resp.json()["detail"]
+
+        # with wrong token -> 403
+        resp = client.delete("/api/memory/bank?token=wrong")
+        assert resp.status_code == 403
+
+        # with valid token in query -> 200
+        with patch("app.memory.service.MemoryService.reset_bank", AsyncMock(return_value=None)):
+            resp = client.delete("/api/memory/bank?token=secret123")
+            assert resp.status_code == 200
+
+        # with valid token in Authorization header -> 200
+        with patch("app.memory.service.MemoryService.reset_bank", AsyncMock(return_value=None)):
+            resp = client.delete("/api/memory/bank", headers={"Authorization": "Bearer secret123"})
+            assert resp.status_code == 200
+
+
+def test_serve_static_index(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "html" in resp.headers.get("content-type", "").lower()
+
+

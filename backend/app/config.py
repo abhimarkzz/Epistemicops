@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     # Seconds to wait for a single LLM response before raising TimeoutError
     llm_timeout: int = 60
 
+    # Public deployment & security settings
+    allow_public_reset: bool = True
+    admin_token: str = ""
+    max_concurrent_investigations: int = 2
+
     model_config = SettingsConfigDict(
         env_file=str(_ENV_FILE),
         env_file_encoding="utf-8",

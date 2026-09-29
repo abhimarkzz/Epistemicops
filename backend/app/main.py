@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -27,6 +27,7 @@ INCIDENTS_DIR = _PROJECT_ROOT / "data" / "incidents"
 DEMO_EVENTS_DIR = _PROJECT_ROOT / "data" / "demo_events"
 
 _fixtures = FixtureService(INCIDENTS_DIR)
+_investigation_sem = asyncio.Semaphore(settings.max_concurrent_investigations)
 
 
 @asynccontextmanager
@@ -246,6 +247,19 @@ async def investigate_incident(
         )
         yield {"data": started_event.model_dump_json()}
         try:
+            await asyncio.wait_for(_investigation_sem.acquire(), timeout=5.0)
+        except asyncio.TimeoutError:
+            err = AgentEvent(
+                event="run_failed",
+                data={
+                    "error": f"Server busy: maximum concurrent investigations ({settings.max_concurrent_investigations}) reached. Please try again in a few moments."
+                },
+            )
+            store.on_event(run_id, "run_failed", err.data)
+            yield {"data": err.model_dump_json()}
+            return
+
+        try:
             async for event in run_investigation(
                 incident_id, _fixtures, skip_memory=(mode == "baseline")
             ):
@@ -255,6 +269,8 @@ async def investigate_incident(
             err = AgentEvent(event="run_failed", data={"error": str(exc)})
             store.on_event(run_id, "run_failed", err.data)
             yield {"data": err.model_dump_json()}
+        finally:
+            _investigation_sem.release()
 
         elapsed_ms = int((time.monotonic() - t0) * 1000)
         try:
@@ -308,13 +324,23 @@ async def set_approval(
 
 
 @app.delete("/api/memory/bank")
-async def reset_memory_bank() -> dict[str, str]:
+async def reset_memory_bank(
+    authorization: str | None = Header(None),
+    token: str | None = Query(None),
+) -> dict[str, str]:
     """Wipe the Hindsight bank and recreate it, then clear the approval store.
 
     Only the EpistemicOps bank is affected.  Other Hindsight banks are not touched.
     The approval store (data/memory_state.json) is also cleared.
     This operation is irreversible — call with intention.
     """
+    if not settings.allow_public_reset:
+        supplied = token or (authorization.replace("Bearer ", "") if authorization else "")
+        if not settings.admin_token or supplied != settings.admin_token:
+            raise HTTPException(
+                status_code=403,
+                detail="Memory reset is disabled on this public demo deployment. Admin token required.",
+            )
     svc = get_memory_service()
     await svc.reset_bank()
     return {"status": "reset", "message": "Hindsight bank and approval store cleared."}
@@ -353,3 +379,25 @@ async def compare_runs(body: CompareRequest) -> RunComparison:
             detail=f"One or both run IDs not found: {body.run_id_a!r}, {body.run_id_b!r}",
         )
     return result
+
+
+# ── production static frontend serving ────────────────────────────────────────
+_FRONTEND_DIST = _PROJECT_ROOT / "frontend" / "dist"
+if _FRONTEND_DIST.exists():
+    from fastapi.staticfiles import StaticFiles
+    from starlette.responses import FileResponse
+
+    _assets_dir = _FRONTEND_DIST / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = _FRONTEND_DIST / full_path
+        if full_path and file_path.is_file():
+            return FileResponse(file_path)
+        index_file = _FRONTEND_DIST / "index.html"
+        if index_file.is_file():
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Not found")
+

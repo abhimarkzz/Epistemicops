@@ -1,0 +1,39 @@
+# EpistemicOps Caddyfile
+# Caddy provides automatic HTTPS through Let's Encrypt with zero manual certificate setup.
+# Replace :80 with your domain (e.g. epistemicops.example.com) for automatic TLS.
+
+:80 {
+    # Serve static frontend assets
+    root * /home/epistemicops/epistemicops/frontend/dist
+    file_server
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Health check proxy
+    handle /health {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Server-Sent Events (SSE) investigation stream
+    # Caddy does not buffer by default for response streams.
+    handle /api/investigate/* {
+        reverse_proxy 127.0.0.1:8000 {
+            flush_interval -1
+        }
+    }
+
+    # REST API proxy
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Fallback to index.html for Single Page Application routing
+    handle {
+        try_files {path} /index.html
+    }
+}

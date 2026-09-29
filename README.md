@@ -23,6 +23,7 @@ A local SRE incident-response assistant. It investigates infrastructure incident
 13. [Known limitations](#13-known-limitations)
 14. [License and attribution](#14-license-and-attribution)
 15. [Privacy, trust & legal considerations](#15-privacy-trust--legal-considerations)
+16. [Public production deployment ($0 cost)](#16-public-production-deployment-0-cost)
 
 ---
 
@@ -579,4 +580,31 @@ For full audits and documentation:
 - [Analytics & Telemetry Audit](docs/ANALYTICS_AUDIT.md)
 - [Third-Party Services Audit](docs/THIRD_PARTY_AUDIT.md)
 - [Legal & Privacy Audit Matrix](docs/LEGAL_PRIVACY_AUDIT.md)
+
+---
+
+## 16. Public evaluation deployment ($0 cost / no credit card)
+
+EpistemicOps can be deployed as a publicly accessible demo web application with **$0 recurring cost and NO credit card required**.
+
+### Recommended: Render (Free Web Service) + Neon Serverless PostgreSQL
+- **Deployment Type:** Free Public Evaluation / Demo Deployment (sleeps after 15 min idle; ~45-60s wake).
+- **Sign Up:** GitHub account only. **Zero payment info or credit card requested.**
+- **Cost:** 100% Free Forever ($0.00).
+- **Persistent Memory:** Hindsight vector memories and runbooks are stored in a free [Neon](https://neon.tech/) PostgreSQL database (`pgvector`), surviving container restarts without Render's 30-day expiration window.
+- **Slim Cloud Embeddings:** Runs under Render's 512 MB RAM ceiling (~205 MB stack RSS) by configuring Hindsight for remote Gemini embeddings (`gemini-embedding-001` or `gemini-embedding-2`), replacing 673 MB of local ONNX and FlashRank neural models.
+- **Fast Setup (5 minutes):**
+  1. Create a free database at [neon.tech](https://neon.tech/) and run `CREATE EXTENSION IF NOT EXISTS vector;`.
+  2. Create a free Web Service on [render.com](https://render.com/) from your GitHub repository using environment **Docker**.
+  3. Set Environment Variables: `PORT=8000`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `HINDSIGHT_API_EMBEDDINGS_PROVIDER=gemini`, `HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001`, `HINDSIGHT_API_RERANKER_PROVIDER=none`, and `HINDSIGHT_API_DATABASE_URL` (your Neon connection string).
+  4. Render builds and launches your public application with free automatic HTTPS!
+- **Detailed Step-by-Step Guide:** See [docs/NO_CARD_DEPLOYMENT.md](docs/NO_CARD_DEPLOYMENT.md).
+
+### Alternative: Self-Hosted Linux Server / OCI
+For users with an existing Linux VM or Oracle Cloud Always Free account:
+- Automated setup script: `sudo bash deploy/setup-server.sh`
+- Complete operations guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [deploy/README.md](deploy/README.md).
+
+
+
 

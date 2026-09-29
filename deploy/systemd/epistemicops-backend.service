@@ -1,0 +1,30 @@
+[Unit]
+Description=EpistemicOps FastAPI Backend Service
+After=network.target hindsight.service
+Wants=hindsight.service
+
+[Service]
+Type=simple
+User=epistemicops
+Group=epistemicops
+WorkingDirectory=/home/epistemicops/epistemicops/backend
+EnvironmentFile=/home/epistemicops/epistemicops/backend/.env
+
+# Bind FastAPI strictly to localhost on port 8000
+ExecStart=/home/epistemicops/epistemicops/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2 --timeout-keep-alive 65
+Restart=always
+RestartSec=5s
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/epistemicops/epistemicops/data
+PrivateTmp=true
+
+# Resource limits for free-tier VM
+LimitNOFILE=65536
+MemoryMax=3G
+
+[Install]
+WantedBy=multi-user.target

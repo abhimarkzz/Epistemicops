@@ -1,0 +1,40 @@
+[Unit]
+Description=Hindsight Vector Memory Service (Native)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=epistemicops
+Group=epistemicops
+WorkingDirectory=/home/epistemicops/epistemicops
+EnvironmentFile=/home/epistemicops/epistemicops/backend/.env
+
+# Default settings for Native Hindsight with local ONNX models
+Environment="HINDSIGHT_PORT=8888"
+Environment="HINDSIGHT_API_LLM_PROVIDER=groq"
+Environment="HINDSIGHT_API_LLM_MODEL=openai/gpt-oss-120b"
+Environment="HINDSIGHT_API_LLM_MAX_CONCURRENT=1"
+Environment="HINDSIGHT_API_ENABLE_OBSERVATIONS=true"
+Environment="HINDSIGHT_API_LLM_GROQ_SERVICE_TIER=on_demand"
+Environment="HINDSIGHT_API_EMBEDDINGS_PROVIDER=onnx"
+Environment="HINDSIGHT_API_RERANKER_PROVIDER=flashrank"
+Environment="HINDSIGHT_API_MODEL_INIT_TIMEOUT=1200"
+
+ExecStart=/home/epistemicops/epistemicops/.venv-hindsight/bin/hindsight-api --port 8888
+Restart=always
+RestartSec=5s
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/epistemicops/.hindsight
+PrivateTmp=true
+
+# Resource limits for free-tier VM
+LimitNOFILE=65536
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target
