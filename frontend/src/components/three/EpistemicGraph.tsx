@@ -49,17 +49,17 @@ export interface EpistemicGraphProps {
 // ── Color Constants ─────────────────────────────────────────────
 
 const COLORS = {
-  healthy:       new THREE.Color('#22C55E'),
-  warning:       new THREE.Color('#F59E0B'),
-  critical:      new THREE.Color('#EF4444'),
-  investigating: new THREE.Color('#22D3EE'),
-  rootCause:     new THREE.Color('#FF6B35'),
-  memory:        new THREE.Color('#A78BFA'),
-  indigo:        new THREE.Color('#6366F1'),
-  edge:          new THREE.Color('#2A3545'),
-  edgeHighlight: new THREE.Color('#22D3EE'),
-  surface:       new THREE.Color('#0D1118'),
-  text:          new THREE.Color('#9AA6B2'),
+  healthy:       new THREE.Color('#33ff00'),
+  warning:       new THREE.Color('#fdaf00'),
+  critical:      new THREE.Color('#ff4444'),
+  investigating: new THREE.Color('#79ff5a'),
+  rootCause:     new THREE.Color('#ff4444'),
+  memory:        new THREE.Color('#33ff00'),
+  indigo:        new THREE.Color('#33ff00'),
+  edge:          new THREE.Color('#1f521f'),
+  edgeHighlight: new THREE.Color('#33ff00'),
+  surface:       new THREE.Color('#131313'),
+  text:          new THREE.Color('#eeffe2'),
 };
 
 // ── Topology Derivation ─────────────────────────────────────────
@@ -755,11 +755,11 @@ function EpistemicGraph2D({
 
   const getStateColor = (state: TopologyNode['state']) => {
     switch (state) {
-      case 'root-cause': return '#FF6B35';
-      case 'critical': return '#EF4444';
-      case 'warning': return '#F59E0B';
-      case 'investigating': return '#22D3EE';
-      default: return '#22C55E';
+      case 'root-cause': return '#A83B3B';
+      case 'critical': return '#A83B3B';
+      case 'warning': return '#B56A28';
+      case 'investigating': return '#33ff00';
+      default: return '#4F7557';
     }
   };
 
@@ -772,7 +772,7 @@ function EpistemicGraph2D({
         aria-label="2D Topology Graph"
       >
         <defs>
-          <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+          <filter id="glow-terracotta" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -780,8 +780,8 @@ function EpistemicGraph2D({
             </feMerge>
           </filter>
           <radialGradient id="node-surface" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#161D2A" />
-            <stop offset="100%" stopColor="#0D1118" />
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="100%" stopColor="#FBF9F5" />
           </radialGradient>
         </defs>
 
@@ -791,16 +791,16 @@ function EpistemicGraph2D({
             <path
               d={`M ${cx - 120} 35 Q ${cx} 15 ${cx + 120} 35`}
               fill="none"
-              stroke="#A78BFA"
+              stroke="#33ff00"
               strokeWidth="1.5"
               strokeDasharray="4 3"
-              opacity="0.6"
+              opacity="0.8"
             />
-            <circle cx={cx - 100} cy={32} r={4} fill="#A78BFA" />
-            <circle cx={cx} cy={20} r={5} fill="#A78BFA" />
-            <circle cx={cx + 100} cy={32} r={4} fill="#A78BFA" />
-            <line x1={cx} y1={25} x2={cx} y2={cy - 28} stroke="#A78BFA" strokeWidth="1" strokeDasharray="3 3" opacity="0.3" />
-            <text x={cx} y={12} fill="#A78BFA" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono)">
+            <circle cx={cx - 100} cy={32} r={4} fill="#33ff00" />
+            <circle cx={cx} cy={20} r={5} fill="#33ff00" />
+            <circle cx={cx + 100} cy={32} r={4} fill="#33ff00" />
+            <line x1={cx} y1={25} x2={cx} y2={cy - 28} stroke="#33ff00" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+            <text x={cx} y={12} fill="#33ff00" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono)">
               {memoryCount} memories recalled
             </text>
           </g>
@@ -818,8 +818,8 @@ function EpistemicGraph2D({
               y1={fromPos.y}
               x2={toPos.x}
               y2={toPos.y}
-              stroke={edge.highlighted ? '#22D3EE' : '#2A3545'}
-              strokeWidth={edge.highlighted ? 2 : 1}
+              stroke={edge.highlighted ? '#33ff00' : '#1f521f'}
+              strokeWidth={edge.highlighted ? 2 : 1.5}
               strokeDasharray={edge.highlighted ? '4 3' : undefined}
               className={edge.highlighted ? 'edge-highlighted-2d' : undefined}
             />
@@ -855,7 +855,7 @@ function EpistemicGraph2D({
                 <circle
                   r={r + 7}
                   fill="none"
-                  stroke={isSelected ? '#6366F1' : nodeColor}
+                  stroke={isSelected ? '#33ff00' : nodeColor}
                   strokeWidth="2"
                   opacity={isSelected ? 0.8 : 0.4}
                   strokeDasharray={node.state === 'investigating' ? '3 3' : undefined}
@@ -890,7 +890,7 @@ function EpistemicGraph2D({
               {/* Label */}
               <text
                 y={r + 14}
-                fill={isSelected ? '#F5F7FA' : '#9AA6B2'}
+                fill={isSelected ? '#131313' : '#0e0e0e'}
                 fontSize="11"
                 fontWeight={isSelected ? '600' : '400'}
                 textAnchor="middle"
@@ -1041,18 +1041,32 @@ export default function EpistemicGraph(props: EpistemicGraphProps) {
             <button
               type="button"
               className="graph-btn"
-              onClick={() => setFitTrigger(t => t + 1)}
-              title="Fit all topology nodes in view"
+              onClick={() => setResetTrigger(t => t + 1)}
+              title="Reset camera to default view"
             >
-              Fit View
+              RESET
+            </button>
+            <button
+              type="button"
+              className="graph-btn graph-btn-focus"
+              onClick={() => {
+                const rootNode = nodes.find(n => n.state === 'root-cause' || n.state === 'critical' || n.state === 'investigating') ?? nodes[0];
+                if (rootNode) {
+                  setFocusPosition([...rootNode.position]);
+                  setSelectedNodeId(rootNode.id);
+                }
+              }}
+              title="Focus camera on investigated or root cause node"
+            >
+              FOCUS ROOT
             </button>
             <button
               type="button"
               className="graph-btn"
-              onClick={() => setResetTrigger(t => t + 1)}
-              title="Reset camera to default view"
+              onClick={() => setFitTrigger(t => t + 1)}
+              title="Fit all topology nodes in view"
             >
-              Reset
+              FIT GRAPH
             </button>
           </>
         )}
@@ -1193,10 +1207,10 @@ export default function EpistemicGraph(props: EpistemicGraphProps) {
         </div>
 
         <div className="graph-legend">
-          <span className="leg-item"><span className="leg-dot leg-healthy" /> Healthy</span>
-          <span className="leg-item"><span className="leg-dot leg-investigating" /> Investigating</span>
-          <span className="leg-item"><span className="leg-dot leg-rootcause" /> Root cause</span>
+          <span className="leg-item"><span className="leg-dot leg-service" /> Service</span>
           <span className="leg-item"><span className="leg-dot leg-memory" /> Memory</span>
+          <span className="leg-item"><span className="leg-dot leg-critical" /> Critical</span>
+          <span className="leg-item"><span className="leg-dot leg-healthy" /> Healthy</span>
         </div>
       </div>
     </div>

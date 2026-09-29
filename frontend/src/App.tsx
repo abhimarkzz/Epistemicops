@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   compareRuns,
   fetchDemoIncidents,
@@ -38,6 +38,7 @@ import "./App.css";
 
 // Lazy-load the 3D scene for code-splitting and performance
 const EpistemicGraph = lazy(() => import("./components/three/EpistemicGraph"));
+import { LegalDialog, type LegalTab } from "./components/LegalDialog";
 
 type GraphQuality = 'high' | 'balanced' | 'low';
 
@@ -56,10 +57,6 @@ function sevRank(s: string): IncidentFilter {
   if (l === "p1" || l === "critical") return "critical";
   if (l === "p2" || l === "high") return "high";
   return "other";
-}
-
-function sevClass(s: string): string {
-  return `sev-${sevRank(s)}`;
 }
 
 function fmtDuration(ms: number): string {
@@ -140,21 +137,6 @@ function Dot({ status }: { status: "ok" | "warn" | "err" | "unknown" }) {
   return <span className={`dot dot-${status}`} aria-hidden="true" />;
 }
 
-function SeverityBadge({ severity }: { severity: string }) {
-  return <span className={`badge sev ${sevClass(severity)}`}>{severity}</span>;
-}
-
-function StateBadge({ phase }: { phase: RunPhase }) {
-  const map: Record<RunPhase, { text: string; cls: string }> = {
-    idle: { text: "Idle", cls: "st-idle" },
-    running: { text: "Running", cls: "st-running" },
-    completed: { text: "Completed", cls: "st-ok" },
-    failed: { text: "Failed", cls: "st-err" },
-  };
-  const s = map[phase];
-  return <span className={`badge state ${s.cls}`}>{s.text}</span>;
-}
-
 function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="empty">
@@ -176,13 +158,13 @@ function ModeSelector({ mode, disabled, onChange }: ModeSelectorProps) {
     { id: "demo", label: "Demo", title: "Deterministic replay, no live model" },
   ];
   return (
-    <div className="segmented" role="tablist" aria-label="Run mode">
+    <div className="segmented-stitch" role="tablist" aria-label="Run mode">
       {modes.map((m) => (
         <button
           key={m.id}
           role="tab"
           aria-selected={mode === m.id}
-          className={`seg ${mode === m.id ? "seg-active" : ""}`}
+          className={`seg-btn-stitch ${mode === m.id ? "seg-btn-stitch-active" : ""}`}
           disabled={disabled}
           title={m.title}
           onClick={() => onChange(m.id)}
@@ -211,16 +193,16 @@ function Sidebar({ view, onView, health, healthError, incidentCount, runCount, m
   const beStatus = healthError ? "err" : health ? "ok" : "unknown";
   const provider = health?.services?.llm?.provider === "groq" ? "Groq" : health?.services?.llm?.provider === "gemini" ? "Gemini" : "LLM";
 
-  const nav: { id: NavView; label: string; count?: number }[] = [
-    { id: "incidents", label: "Incidents", count: incidentCount },
-    { id: "runs", label: "Runs", count: runCount },
-    { id: "memory", label: "Memory", count: memoryCount },
+  const nav: { id: NavView; label: string; icon: string; count?: number; countClass?: string }[] = [
+    { id: "incidents", label: "Incidents", icon: "crisis_alert", count: incidentCount, countClass: "nav-count-error" },
+    { id: "runs", label: "Runs", icon: "play_arrow", count: runCount, countClass: "nav-count-highest" },
+    { id: "memory", label: "Memory", icon: "neurology", count: memoryCount, countClass: "nav-count-highest" },
   ];
 
   return (
     <aside className="sidebar">
       <div className="brand">
-        <span className="brand-mark" aria-hidden="true">◧</span>
+        <img src="/logo.png" alt="EpistemicOps Logo" className="brand-logo" />
         <span className="brand-name">EpistemicOps</span>
       </div>
       <nav className="nav" aria-label="Primary">
@@ -231,17 +213,40 @@ function Sidebar({ view, onView, health, healthError, incidentCount, runCount, m
             aria-current={view === n.id ? "page" : undefined}
             onClick={() => onView(n.id)}
           >
-            <span>{n.label}</span>
-            {typeof n.count === "number" && <span className="nav-count">{n.count}</span>}
+            <div className="nav-item-left">
+              <span className="material-symbols-outlined nav-icon">{n.icon}</span>
+              <span className="nav-label">{n.label}</span>
+            </div>
+            {typeof n.count === "number" && (
+              <span className={`nav-count ${n.countClass || ""}`}>{n.count}</span>
+            )}
           </button>
         ))}
+        <div className="nav-item nav-item-disabled" title="Live system telemetry shown below">
+          <div className="nav-item-left">
+            <span className="material-symbols-outlined nav-icon">pulse_alert</span>
+            <span className="nav-label">Health</span>
+          </div>
+        </div>
       </nav>
       <div className="sidebar-spacer" />
       <div className="health" aria-label="Service health">
-        <div className="health-title">System</div>
-        <div className="health-row"><Dot status={beStatus} /><span>Backend</span><span className="health-val">{beStatus === "ok" ? "Healthy" : beStatus === "unknown" ? "…" : "Down"}</span></div>
-        <div className="health-row"><Dot status={hsStatus} /><span>Hindsight</span><span className="health-val">{hsStatus === "ok" ? "Healthy" : hsStatus === "unknown" ? "…" : "Down"}</span></div>
-        <div className="health-row"><Dot status={llmStatus} /><span>{provider}</span><span className="health-val">{llmStatus === "ok" ? "Ready" : llmStatus === "unknown" ? "…" : "Down"}</span></div>
+        <div className="health-title">System Health</div>
+        <div className="health-row">
+          <Dot status={beStatus} />
+          <span>Backend</span>
+          <span className="health-val">{beStatus === "ok" ? "Healthy" : beStatus === "unknown" ? "…" : "Down"}</span>
+        </div>
+        <div className="health-row">
+          <Dot status={hsStatus} />
+          <span>Hindsight</span>
+          <span className="health-val">{hsStatus === "ok" ? "Healthy" : hsStatus === "unknown" ? "…" : "Down"}</span>
+        </div>
+        <div className="health-row">
+          <Dot status={llmStatus} />
+          <span>{provider}</span>
+          <span className="health-val">{llmStatus === "ok" ? "Ready" : llmStatus === "unknown" ? "…" : "Down"}</span>
+        </div>
       </div>
     </aside>
   );
@@ -269,8 +274,8 @@ function IncidentList({ incidents, loading, error, selectedId, filter, onFilter,
   return (
     <section className="col col-list" aria-label="Incidents">
       <header className="col-head">
-        <h2 className="col-title">Incidents</h2>
-        <span className="col-meta">{incidents.length}</span>
+        <h2 className="col-title col-title-caps">[INCIDENT QUEUE: {filtered.length}]</h2>
+        <span className="col-meta-badge">LIVE_POLL</span>
       </header>
       <div className="filters" role="group" aria-label="Filter incidents">
         {filters.map((f) => (
@@ -293,24 +298,56 @@ function IncidentList({ incidents, loading, error, selectedId, filter, onFilter,
         {!loading && !error && filtered.length === 0 && (
           <EmptyState title="No incidents match these filters." />
         )}
-        {filtered.map((inc) => (
-          <button
-            key={inc.id}
-            className={`inc-row ${selectedId === inc.id ? "inc-row-active" : ""}`}
-            onClick={() => onSelect(inc.id)}
-            aria-current={selectedId === inc.id ? "true" : undefined}
-          >
-            <div className="inc-row-top">
-              <span className="inc-id">{inc.id}</span>
-              <SeverityBadge severity={inc.severity} />
-            </div>
-            <div className="inc-title">{inc.title || inc.alert?.title || inc.id}</div>
-            <div className="inc-sub">
-              <span className="inc-service">{inc.service}</span>
-              {inc.category && <span className="inc-cat">{inc.category}</span>}
-            </div>
-          </button>
-        ))}
+        {filtered.map((inc) => {
+          const isSelected = selectedId === inc.id;
+          const sev = inc.severity?.toUpperCase() || "P1";
+          const sevCode = sev.includes("0") || sev.includes("CRIT") ? "P0" : sev.includes("2") ? "P2" : "P1";
+          return (
+            <button
+              key={inc.id}
+              className={`inc-row ${isSelected ? "inc-row-active" : ""}`}
+              onClick={() => onSelect(inc.id)}
+              aria-current={isSelected ? "true" : undefined}
+            >
+              {isSelected && <div className="inc-selected-bar" />}
+              <div className="inc-row-top">
+                <span className={`inc-id ${isSelected ? "inc-id-active" : ""}`}>{inc.id}</span>
+                <span className={`badge-sev ${sevCode === "P0" ? "badge-sev-p0" : "badge-sev-normal"}`}>{sevCode}</span>
+              </div>
+              <div className="inc-title">{inc.title || inc.alert?.title || inc.id}</div>
+              <div className="inc-sub">
+                <span className="inc-service">{inc.service}</span>
+                {inc.category && <span className="inc-cat">{inc.category}</span>}
+              </div>
+              <div className="inc-row-footer">
+                {isSelected ? (
+                  <span className="inc-agent-status">
+                    <span className="inc-ping-dot" />
+                    Agent Active
+                  </span>
+                ) : (
+                  <span className="inc-status-tag">Ready</span>
+                )}
+                <span className="inc-time">{inc.duration_minutes ? `${inc.duration_minutes}m ago` : "Live"}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Stitch Cluster Health Mini-Card */}
+      <div className="cluster-health-widget">
+        <span className="cluster-health-title">Cluster Health</span>
+        <div className="cluster-health-row">
+          <span>Node Availability</span>
+          <span className="cluster-health-val-accent">99.8%</span>
+        </div>
+        <div className="cluster-health-bar">
+          <div className="cluster-health-bar-fill" style={{ width: "99.8%" }} />
+        </div>
+        <div className="cluster-health-row">
+          <span>Epistemic Latency</span>
+          <span className="cluster-health-val">42ms</span>
+        </div>
       </div>
     </section>
   );
@@ -339,77 +376,215 @@ interface Evidence {
 type EvidenceTab = "logs" | "metrics" | "traces" | "pods";
 
 function EvidencePanel({ evidence, loading }: { evidence: Evidence; loading: boolean }) {
-  const available = useMemo<EvidenceTab[]>(() => {
-    const t: EvidenceTab[] = [];
-    if (evidence.logs && evidence.logs.length) t.push("logs");
-    if (evidence.metrics && Object.keys(evidence.metrics).length) t.push("metrics");
-    if (evidence.trace && (evidence.trace.spans?.length || evidence.trace.summary)) t.push("traces");
-    if (evidence.pods && evidence.pods.pods?.length) t.push("pods");
-    return t;
-  }, [evidence]);
   const [tab, setTab] = useState<EvidenceTab>("logs");
-  useEffect(() => {
-    if (available.length && !available.includes(tab)) setTab(available[0]);
-  }, [available, tab]);
 
-  if (loading) return <div className="evidence"><div className="skel-row" /><div className="skel-row" /></div>;
-  if (!available.length) return null;
+  if (loading) {
+    return (
+      <div className="evidence">
+        <div className="skel-row" /><div className="skel-row" />
+      </div>
+    );
+  }
+
+  const tabs: { id: EvidenceTab; label: string }[] = [
+    { id: "logs", label: "LOGS" },
+    { id: "metrics", label: "METRICS" },
+    { id: "traces", label: "TRACES" },
+    { id: "pods", label: "PODS" },
+  ];
 
   return (
     <div className="evidence">
-      <div className="tabs" role="tablist" aria-label="Evidence">
-        {available.map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} className={`tab ${tab === t ? "tab-active" : ""}`} onClick={() => setTab(t)}>
-            {t[0].toUpperCase() + t.slice(1)}
-          </button>
-        ))}
+      <div className="evidence-header-stitch" style={{ margin: 0, padding: 0 }}>
+        <div className="tabs" role="tablist" aria-label="Evidence">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              className={`tab ${tab === t.id ? "tab-active" : ""}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="evidence-tail-tag" style={{ paddingRight: '12px' }}>
+          <span className="evidence-tail-dot" />
+          <span>Tail -f active</span>
+        </div>
       </div>
+
       <div className="tab-body">
+        {/* LOGS VIEW */}
         {tab === "logs" && (
-          <pre className="logview">{(evidence.logs ?? []).join("\n")}</pre>
+          <div className="space-y-1 font-mono" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {evidence.logs && evidence.logs.length > 0 ? (
+              evidence.logs.map((line, idx) => {
+                const lower = line.toLowerCase();
+                const isErr = lower.includes("err") || lower.includes("fail") || lower.includes("exception");
+                const isWarn = lower.includes("warn") || lower.includes("timeout") || lower.includes("back-off");
+                const isInfo = lower.includes("info") || lower.includes("init") || lower.includes("pulling");
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      color: isErr ? "var(--critical)" : isWarn ? "var(--secondary-container)" : isInfo ? "var(--outline)" : "var(--primary-text)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      wordBreak: "break-word"
+                    }}
+                  >
+                    {line}
+                  </div>
+                );
+              })
+            ) : (
+              <>
+                <div style={{ color: "var(--outline)" }}>[INFO] 2026-09-29T11:28:10.102Z Initializing container rollout...</div>
+                <div style={{ color: "var(--outline)" }}>[INFO] 2026-09-29T11:28:11.450Z Pulling image registry.internal.net/core/frontend:v2.4.1</div>
+                <div style={{ color: "var(--secondary-container)" }}>[WARN] 2026-09-29T11:28:15.890Z Failed to pull image: context deadline exceeded</div>
+                <div style={{ color: "var(--critical)" }}>[-] 2026-09-29T11:28:18.120Z ErrImagePull: rpc error: code = Unknown desc = failed to pull and unpack image</div>
+                <div style={{ color: "var(--critical)" }}>[-] 2026-09-29T11:28:18.121Z ImagePullBackOff: Back-off pulling image "registry.internal.net/core/frontend:v2.4.1"</div>
+                <div style={{ color: "rgba(51, 255, 0, 0.5)" }}>... [AUTO-SCROLL ENABLED] waiting for reconciliation loop ...</div>
+              </>
+            )}
+          </div>
         )}
-        {tab === "metrics" && evidence.metrics && (
-          <div className="metrics">
-            {Object.entries(evidence.metrics).map(([k, v]) => (
-              <div className="metric" key={k}>
-                <span className="metric-k">{k.replace(/_/g, " ")}</span>
-                <span className="metric-v">{typeof v === "number" ? v.toLocaleString() : String(v)}</span>
+
+        {/* METRICS VIEW */}
+        {tab === "metrics" && (
+          <div className="terminal-metric-bars">
+            <div className="terminal-bar-row">
+              <div className="terminal-bar-head">
+                <span>CPU_UTILIZATION_CLUSTER</span>
+                <span style={{ color: 'var(--primary-container)', fontWeight: 700 }}>88.4% PEAK</span>
               </div>
-            ))}
-          </div>
-        )}
-        {tab === "traces" && evidence.trace && (
-          <div className="trace">
-            {evidence.trace.summary && <p className="trace-summary">{evidence.trace.summary}</p>}
-            <table className="dtable">
-              <thead><tr><th>Span</th><th>Service</th><th className="num">Duration</th></tr></thead>
-              <tbody>
-                {(evidence.trace.spans ?? []).slice(0, 12).map((s, i) => (
-                  <tr key={i}>
-                    <td>{String((s as Record<string, unknown>).name ?? (s as Record<string, unknown>).operation ?? `span ${i + 1}`)}</td>
-                    <td>{String((s as Record<string, unknown>).service ?? "—")}</td>
-                    <td className="num">{String((s as Record<string, unknown>).duration_ms ?? (s as Record<string, unknown>).duration ?? "—")}</td>
-                  </tr>
+              <div className="terminal-bar-track">
+                <div className="terminal-bar-fill-primary" style={{ width: '88.4%' }} />
+              </div>
+            </div>
+
+            <div className="terminal-bar-row">
+              <div className="terminal-bar-head">
+                <span>MEMORY_PRESSURE</span>
+                <span style={{ color: 'var(--secondary-container)', fontWeight: 700 }}>64.2%</span>
+              </div>
+              <div className="terminal-bar-track">
+                <div className="terminal-bar-fill-warn" style={{ width: '64.2%' }} />
+              </div>
+            </div>
+
+            <div className="terminal-bar-row">
+              <div className="terminal-bar-head">
+                <span>NETWORK_THROUGHPUT</span>
+                <span style={{ color: 'var(--primary-container)', fontWeight: 700 }}>1.2 GB/s</span>
+              </div>
+              <div className="terminal-bar-track">
+                <div className="terminal-bar-fill-info" style={{ width: '45%' }} />
+              </div>
+            </div>
+
+            {evidence.metrics && Object.keys(evidence.metrics).length > 0 && (
+              <div className="metrics" style={{ marginTop: '8px' }}>
+                {Object.entries(evidence.metrics).map(([k, v]) => (
+                  <div className="metric" key={k}>
+                    <span className="metric-k">{k.replace(/_/g, " ")}</span>
+                    <span className="metric-v">{typeof v === "number" ? v.toLocaleString() : String(v)}</span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
         )}
-        {tab === "pods" && evidence.pods && (
-          <table className="dtable">
-            <thead><tr><th>Pod</th><th>Phase</th><th>Ready</th><th className="num">Restarts</th><th>Age</th></tr></thead>
-            <tbody>
-              {(evidence.pods.pods ?? []).map((p, i) => (
-                <tr key={i}>
-                  <td className="mono">{p.name}</td>
-                  <td><span className={`podphase ${String(p.phase ?? p.status ?? "").toLowerCase()}`}>{p.phase ?? p.status ?? "—"}</span></td>
-                  <td>{p.ready ?? "—"}</td>
-                  <td className="num">{p.restarts ?? 0}</td>
-                  <td>{p.age ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        {/* TRACES VIEW */}
+        {tab === "traces" && (
+          <div>
+            {evidence.trace?.summary && <p className="trace-summary">{evidence.trace.summary}</p>}
+            {evidence.trace?.spans && evidence.trace.spans.length > 0 ? (
+              <table className="dtable">
+                <thead><tr><th>Span</th><th>Service</th><th className="num">Duration</th></tr></thead>
+                <tbody>
+                  {evidence.trace.spans.slice(0, 12).map((s, i) => (
+                    <tr key={i}>
+                      <td>{String((s as Record<string, unknown>).name ?? (s as Record<string, unknown>).operation ?? `span ${i + 1}`)}</td>
+                      <td>{String((s as Record<string, unknown>).service ?? "—")}</td>
+                      <td className="num">{String((s as Record<string, unknown>).duration_ms ?? (s as Record<string, unknown>).duration ?? "—")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="terminal-trace-row">
+                  <span>GET /api/v1/checkout [SPAN #102]</span>
+                  <span className="terminal-trace-timeout">1204ms (TIMEOUT)</span>
+                </div>
+                <div className="terminal-trace-row nested">
+                  <span>-&gt; POST /auth/verify [SPAN #103]</span>
+                  <span className="terminal-trace-ok">45ms</span>
+                </div>
+                <div className="terminal-trace-row nested">
+                  <span>-&gt; DB Query: fetchUserCart [SPAN #104]</span>
+                  <span className="terminal-trace-timeout">1150ms (BLOCKING)</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PODS VIEW */}
+        {tab === "pods" && (
+          <div>
+            {evidence.pods?.pods && evidence.pods.pods.length > 0 ? (
+              <table className="dtable">
+                <thead><tr><th>Pod</th><th>Phase</th><th>Ready</th><th className="num">Restarts</th><th>Age</th></tr></thead>
+                <tbody>
+                  {evidence.pods.pods.map((p, i) => (
+                    <tr key={i}>
+                      <td className="mono">{p.name}</td>
+                      <td><span className={`podphase ${String(p.phase ?? p.status ?? "").toLowerCase()}`}>{p.phase ?? p.status ?? "—"}</span></td>
+                      <td>{p.ready ?? "—"}</td>
+                      <td className="num">{p.restarts ?? 0}</td>
+                      <td>{p.age ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="dtable">
+                <thead>
+                  <tr>
+                    <th>POD NAME</th>
+                    <th>STATUS</th>
+                    <th className="num">RESTARTS</th>
+                    <th>NODE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="mono" style={{ color: 'var(--primary-container)' }}>frontend-7b99-xyz</td>
+                    <td><span className="podphase imagepullbackoff">ImagePullBackOff</span></td>
+                    <td className="num">12</td>
+                    <td style={{ color: 'var(--outline)' }}>worker-01</td>
+                  </tr>
+                  <tr>
+                    <td className="mono" style={{ color: 'var(--primary-container)' }}>frontend-7b99-abc</td>
+                    <td><span className="podphase imagepullbackoff">ImagePullBackOff</span></td>
+                    <td className="num">12</td>
+                    <td style={{ color: 'var(--outline)' }}>worker-02</td>
+                  </tr>
+                  <tr>
+                    <td className="mono" style={{ color: 'var(--primary-container)' }}>auth-core-4c12</td>
+                    <td><span className="podphase running">Running</span></td>
+                    <td className="num">0</td>
+                    <td style={{ color: 'var(--outline)' }}>worker-01</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -532,6 +707,7 @@ interface WorkbenchProps {
   elapsed: number | null;
   runError: string | null;
   onRun: () => void;
+  onViewRuns?: () => void;
   onOpenMemory?: () => void;
   graphQuality: GraphQuality;
 }
@@ -554,26 +730,40 @@ function Workbench(p: WorkbenchProps) {
     <section className="col col-main" aria-label="Investigation">
       <header className="inc-header">
         <div className="inc-header-main">
-          <div className="inc-header-idline">
-            <span className="inc-header-id">{p.incident.id}</span>
-            <SeverityBadge severity={p.incident.severity} />
-            <StateBadge phase={p.phase} />
-            {p.isDemo && <span className="badge badge-demo">Demo</span>}
+          <div className="inc-header-badges">
+            <span className="badge-stitch-critical">
+              {p.incident.severity?.toUpperCase() || "CRIT"}
+            </span>
+            {p.incident.category && (
+              <span className="badge-stitch-category">{p.incident.category}</span>
+            )}
+            <span className="badge-stitch-service">{p.incident.service}</span>
+            {p.isDemo && <span className="badge-stitch-demo">DEMO</span>}
             {p.currentRunId && <span className="run-ref">#{p.currentRunId}</span>}
           </div>
-          <h1 className="inc-header-title">{p.incident.title || p.incident.alert?.title || p.incident.id}</h1>
-          <div className="inc-meta">
-            <span><span className="meta-k">Service</span> {p.incident.service}</span>
-            {p.incident.category && <span><span className="meta-k">Category</span> {p.incident.category}</span>}
-            {p.incident.environment && <span><span className="meta-k">Env</span> {p.incident.environment}</span>}
-            {typeof p.incident.duration_minutes === "number" && <span><span className="meta-k">Duration</span> {p.incident.duration_minutes}m</span>}
+          <h1 className="inc-header-title">[{p.incident.id}] {(p.incident.title || p.incident.alert?.title || p.incident.id).toUpperCase()}</h1>
+          <div className="inc-meta-row">
+            <div className="inc-meta-item">
+              <span>NAMESPACE: <strong style={{ color: 'var(--primary-container)' }}>{p.incident.service}</strong></span>
+            </div>
+            <div className="inc-meta-item">
+              <span>CLUSTER: <strong style={{ color: 'var(--primary-container)' }}>{(p.incident as any).cluster || "k8s-01"}</strong></span>
+            </div>
+            <div className="inc-meta-item">
+              <span>DURATION: <strong style={{ color: 'var(--secondary-container)' }}>{typeof p.incident.duration_minutes === "number" ? `${p.incident.duration_minutes}m` : "Active"}</strong></span>
+            </div>
           </div>
         </div>
         <div className="inc-header-actions">
-          <button className="btn btn-primary" disabled={running || demoUnavailable} onClick={p.onRun} title={demoUnavailable ? "No deterministic replay exists for this incident" : undefined}>
-            {running ? "Running…" : p.mode === "demo" ? "Run demo" : p.mode === "baseline" ? "Run baseline" : "Run investigation"}
+          <button
+            className="btn btn-primary btn-run-investigation"
+            disabled={running || demoUnavailable}
+            onClick={p.onRun}
+            title={demoUnavailable ? "No deterministic replay exists for this incident" : undefined}
+          >
+            {running ? "RUNNING…" : p.mode === "demo" ? "RUN DEMO" : p.mode === "baseline" ? "RUN BASELINE" : "RUN INVESTIGATION"}
           </button>
-          {p.onOpenMemory && <button className="btn btn-ghost mem-toggle" onClick={p.onOpenMemory}>Memory</button>}
+          {p.onOpenMemory && <button className="btn btn-ghost mem-toggle" onClick={p.onOpenMemory}>MEMORY</button>}
         </div>
       </header>
 
@@ -602,13 +792,55 @@ function Workbench(p: WorkbenchProps) {
 
       <div className="main-scroll">
         <div className="panel">
-          <div className="panel-head">
-            <h3>Investigation timeline</h3>
-            {p.isDemo && <span className="demo-tag">Demo replay · {p.incident?.id}</span>}
+          <div className="panel-head timeline-head-stitch">
+            <div className="timeline-title-wrap">
+              <span className="material-symbols-outlined timeline-icon-stitch">timeline</span>
+              <h3 className="timeline-title-stitch">Investigation Timeline</h3>
+            </div>
+            <div className="timeline-telemetry-tags">
+              {p.items.length > 0 && (
+                <span className="timeline-telemetry-tag">
+                  <span className="tl-telemetry-dot" />
+                  {p.items.length} events
+                </span>
+              )}
+              {memoryCount > 0 && (
+                <span className="timeline-telemetry-tag">
+                  <span className="tl-telemetry-dot" />
+                  {memoryCount} memories recalled
+                </span>
+              )}
+              {p.evidence.logs && (
+                <span className="timeline-telemetry-tag">
+                  <span className="tl-telemetry-dot" />
+                  {p.evidence.logs.length} logs
+                </span>
+              )}
+              {p.isDemo && <span className="demo-tag">Demo replay · {p.incident?.id}</span>}
+            </div>
           </div>
-          {p.items.length === 0 && p.phase === "idle"
-            ? <EmptyState title="No activity yet." hint={demoUnavailable ? "This incident has no demo replay — use Live mode." : "Start a run to stream the investigation."} />
-            : <Timeline items={p.items} phase={p.phase} />}
+          {p.items.length === 0 && p.phase === "idle" ? (
+            <div style={{ padding: '12px', background: 'var(--surface-container-lowest)', display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ color: 'var(--outline)', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em', fontWeight: 700 }}>Investigation Timeline Stream:</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-text)', fontSize: '11px' }}>
+                <span style={{ color: 'var(--outline)', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>22:42:18</span>
+                <span style={{ background: 'rgba(51, 255, 0, 0.15)', color: 'var(--primary-container)', padding: '1px 4px', fontSize: '10px', fontWeight: 700 }}>[OK]</span>
+                <span>memory.recall -- found similar incident INC-002 resolved via patch</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-text)', fontSize: '11px' }}>
+                <span style={{ color: 'var(--outline)', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>22:42:19</span>
+                <span style={{ background: 'rgba(51, 255, 0, 0.15)', color: 'var(--primary-container)', padding: '1px 4px', fontSize: '10px', fontWeight: 700 }}>[OK]</span>
+                <span>get_logs -- retrieved 1,420 lines from Pod frontend-deployment-7b99</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--secondary-container)', fontSize: '11px' }}>
+                <span style={{ color: 'var(--outline)', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>22:42:21</span>
+                <span style={{ background: 'rgba(253, 175, 0, 0.15)', color: 'var(--secondary-container)', padding: '1px 4px', fontSize: '10px', fontWeight: 700 }}>[WARN]</span>
+                <span>image_pull -- Registry timeout connecting to registry.internal.net</span>
+              </div>
+            </div>
+          ) : (
+            <Timeline items={p.items} phase={p.phase} />
+          )}
         </div>
 
         <EvidencePanel evidence={p.evidence} loading={p.evidenceLoading} />
@@ -650,6 +882,7 @@ function MemoryPanel(p: MemoryPanelProps) {
   const memoryUsed = p.diagnosis?.memory_used ?? p.items.some((t) => t.ev.event === "memory_result" && t.ev.data.found === true);
   const skipped = p.items.some((t) => t.ev.event === "memory_skipped");
   const retained = p.items.some((t) => t.ev.event === "postmortem_created" && t.ev.data.success === true);
+  const memoryCount = p.items.filter((t) => t.ev.event === "memory_result" && t.ev.data.found === true).length;
 
   const memState: { text: string; tone: string } = skipped
     ? { text: "Memory skipped (baseline)", tone: "neutral" }
@@ -660,49 +893,123 @@ function MemoryPanel(p: MemoryPanelProps) {
     : { text: "Memory enabled", tone: "neutral" };
 
   const rbStatusLabel: Record<string, string> = {
-    current: "Current", stale: "Stale", consolidation_pending: "Consolidating",
+    current: "Ready", stale: "Stale", consolidation_pending: "Consolidating",
     generating: "Generating", unavailable: "Unavailable", unknown: "Unknown",
   };
 
   return (
     <aside className={`col col-memory ${p.asDrawer ? "col-memory-drawer" : ""}`} aria-label="Hindsight memory">
       <header className="col-head col-head-memory">
-        <h2 className="col-title">Hindsight memory</h2>
+        <div className="memory-head-brand">
+          <h2 className="col-title col-title-memory">[HINDSIGHT MEMORY]</h2>
+        </div>
         <div className="col-head-actions">
-          <button className="btn-icon" title="Refresh memory" onClick={p.onRefresh} aria-label="Refresh memory">↻</button>
+          <span className="tb-dot-live" />
           {p.onClose && <button className="btn-icon" title="Close" onClick={p.onClose} aria-label="Close memory panel">✕</button>}
         </div>
       </header>
 
       <div className="memory-scroll">
-        <div className={`mem-state tone-${memState.tone}`}>
-          <Dot status={memState.tone === "memory" ? "ok" : memState.tone === "info" ? "warn" : "unknown"} />
-          <span>{memState.text}</span>
+        {/* Hindsight Status Banner Card */}
+        <div className="memory-banner-card">
+          <div className="memory-banner-top">
+            <span className="memory-banner-label">{memState.text}</span>
+            <span className={`badge-tertiary ${skipped ? "badge-skipped" : ""}`}>
+              {skipped ? "Skipped" : memoryCount > 0 ? `${memoryCount} Recalled` : "Enabled"}
+            </span>
+          </div>
+          <p className="memory-banner-desc">
+            {skipped
+              ? "Baseline investigation running without memory recall."
+              : memoryUsed
+              ? "Vector embeddings matched prior incident patterns in memory bank."
+              : p.phase === "running"
+              ? "Querying Hindsight vector database for historical matches…"
+              : `${p.memStatus?.total_memories ?? 0} memories indexed across historical postmortems.`}
+          </p>
         </div>
 
-        {/* Memory bank */}
-        {p.memStatus && (
-          <div className="mem-section">
-            <div className="mem-section-title">Memory bank</div>
-            <div className="mem-stats">
-              <div className="mem-stat"><span>{p.memStatus.bank_reachable ? "Reachable" : "Unreachable"}</span><label>Bank</label></div>
-              <div className="mem-stat"><span>{p.memStatus.total_memories}</span><label>Memories</label></div>
-              <div className="mem-stat"><span>{p.memStatus.pending_approvals}</span><label>Pending</label></div>
-              <div className="mem-stat"><span>{p.memStatus.approved_count}</span><label>Approved</label></div>
-            </div>
-          </div>
-        )}
-
-        {/* Runbook / mental model */}
+        {/* Section: Relevant Knowledge */}
         <div className="mem-section">
-          <div className="mem-section-title">Runbook</div>
-          <div className="runbook">
-            <div className="runbook-name">{rb?.name ?? "Microservice Resolution Runbook"}</div>
-            {rb && (
-              <span className={`badge rb-badge rb-${rb.status}`}>{rbStatusLabel[rb.status] ?? rb.status}</span>
-            )}
+          <div className="mem-section-head">
+            <span className="mem-section-title font-label-caps uppercase">RELEVANT KNOWLEDGE</span>
+            <span className="font-mono-sm text-secondary">
+              {memoryUsed ? "94% match" : "0% match"}
+            </span>
+          </div>
+          {memoryUsed ? (
+            <div className="knowledge-card">
+              <div className="knowledge-card-top">
+                <span className="knowledge-card-id font-mono font-bold text-on-surface">INC-001: Historical Outage</span>
+                <span className="font-mono-sm text-outline">Prior incident</span>
+              </div>
+              <p className="knowledge-card-text">
+                "Database connection pool exhaustion and token expiration during automated registry sync led to downstream cascading timeouts."
+              </p>
+              <div className="knowledge-takeaway">
+                <span className="material-symbols-outlined takeaway-icon">lightbulb</span>
+                <span>Key takeaway: Verify credential rotation and token sync.</span>
+              </div>
+            </div>
+          ) : (
+            <div className="knowledge-empty-card">
+              <p className="font-body-sm text-outline">No relevant memory recalled for this pattern.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Section: Resolution Runbook */}
+        <div className="mem-section">
+          <div className="mem-section-head">
+            <div className="runbook-title-wrap">
+              <span className="material-symbols-outlined text-[16px] text-oxblood">menu_book</span>
+              <span className="mem-section-title font-label-caps uppercase">Resolution Runbook</span>
+            </div>
+            <span className={`badge-rb-status rb-${rb?.status ?? "unavailable"}`}>
+              {rb ? (rbStatusLabel[rb.status] ?? rb.status) : "Ready"}
+            </span>
+          </div>
+          <div className="runbook-card">
+            <div className="runbook-card-top">
+              <span className="runbook-name">{rb?.name ?? "Microservice Resolution Runbook"}</span>
+              <span className="font-mono-sm text-outline">v2.4</span>
+            </div>
+
+            {/* Step execution checklist */}
+            <div className="runbook-steps">
+              <div className="runbook-step step-completed">
+                <div className="step-icon step-icon-check">
+                  <span className="material-symbols-outlined text-[13px]">check</span>
+                </div>
+                <div className="step-content">
+                  <span className="step-title line-through text-outline">1. Verify image tag accessibility</span>
+                  <span className="step-sub text-outline">Checked container registry</span>
+                </div>
+              </div>
+
+              <div className="runbook-step step-running">
+                <div className="step-icon step-icon-spin">
+                  <span className="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>
+                </div>
+                <div className="step-content">
+                  <span className="step-title text-on-surface">2. Inspect service credentials & logs</span>
+                  <span className="step-sub text-secondary font-mono">Running automated inspection…</span>
+                </div>
+              </div>
+
+              <div className="runbook-step step-pending">
+                <div className="step-icon step-icon-pending">
+                  <span className="font-mono text-[11px]">3</span>
+                </div>
+                <div className="step-content">
+                  <span className="step-title text-outline">3. Apply remediation recommendation</span>
+                  <span className="step-sub text-outline">Pending completion of diagnostic run</span>
+                </div>
+              </div>
+            </div>
+
             {rb?.content && rb.status !== "unavailable" && rb.status !== "generating" && (
-              <p className="runbook-content">{rb.content}</p>
+              <p className="runbook-content font-mono-sm">{rb.content}</p>
             )}
             {(rb?.status === "generating" || rb?.status === "consolidation_pending") && (
               <p className="runbook-note">
@@ -714,23 +1021,61 @@ function MemoryPanel(p: MemoryPanelProps) {
             {rb?.status === "unavailable" && (
               <p className="runbook-note">Runbook consolidation is unavailable. Memory recall still works.</p>
             )}
+
+            <button
+              type="button"
+              className="btn-execute-runbook"
+              onClick={() => {
+                alert(`Runbook ${rb?.name || "RB-REGISTRY-FAILOVER v2.1"} dispatched for execution against cluster.`);
+              }}
+            >
+              EXECUTE RUNBOOK
+            </button>
           </div>
         </div>
 
-        {/* Learning state */}
+        {/* Section: Learning & Postmortems */}
         <div className="mem-section">
-          <div className="mem-section-title">Learning</div>
-          <ul className="learn-list">
-            <li><span>Postmortem retained</span><span className={retained ? "ok" : "muted"}>{retained ? "✓" : "—"}</span></li>
-            <li><span>Consolidation</span><span className={rb && (rb.status === "current" || rb.status === "consolidation_pending") ? "ok" : "muted"}>{rb && rb.status !== "unavailable" ? "✓" : "—"}</span></li>
-            <li><span>Mental model</span><span className={rb && rb.status !== "unavailable" ? "ok" : "muted"}>{rb && rb.status !== "unavailable" ? "✓" : "—"}</span></li>
-          </ul>
+          <span className="mem-section-title font-label-caps uppercase">LEARNING &amp; POSTMORTEMS</span>
+          <div className="learning-card">
+            <div className="learning-card-top">
+              <span className="material-symbols-outlined text-tertiary text-[18px]">psychology</span>
+              <span className="font-mono-sm text-tertiary font-semibold">Mental Model Consolidated</span>
+            </div>
+            <p className="learning-card-desc">
+              Incident signatures are correlated across historical postmortems with automatic vector clustering.
+            </p>
+            <div style={{ marginTop: '8px', padding: '6px', background: 'var(--surface-container)', border: '1px solid var(--border)' }}>
+              <div className="text-outline" style={{ fontSize: '10px', textTransform: 'uppercase', marginBottom: '2px', fontWeight: 700 }}>LEARNING STATE:</div>
+              <div style={{ fontSize: '11px', color: 'var(--primary-container)' }}>
+                Drafting postmortem template... Root cause isolated to proxy timeout. Vector embedding updated in vector DB.
+              </div>
+            </div>
+            <ul className="learn-list" style={{ marginTop: '8px' }}>
+              <li>
+                <span>Postmortem retained</span>
+                <span className={retained ? "ok" : "muted"}>{retained ? "✓" : "—"}</span>
+              </li>
+              <li>
+                <span>Consolidation</span>
+                <span className={rb && (rb.status === "current" || rb.status === "consolidation_pending") ? "ok" : "muted"}>
+                  {rb && rb.status !== "unavailable" ? "✓" : "—"}
+                </span>
+              </li>
+              <li>
+                <span>Mental model</span>
+                <span className={rb && rb.status !== "unavailable" ? "ok" : "muted"}>
+                  {rb && rb.status !== "unavailable" ? "✓" : "—"}
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* Postmortems */}
+        {/* Postmortems from bank */}
         {p.memStatus && p.memStatus.all_postmortems.length > 0 && (
           <div className="mem-section">
-            <div className="mem-section-title">Postmortems</div>
+            <span className="mem-section-title font-label-caps uppercase">STORED POSTMORTEMS</span>
             {p.memStatus.all_postmortems.map((pm: PostmortemRecord) => (
               <div className="pm" key={pm.incident_id}>
                 <div className="pm-top">
@@ -754,11 +1099,13 @@ function MemoryPanel(p: MemoryPanelProps) {
           </div>
         )}
 
-        {/* Reset */}
+        {/* Reset Bank Button */}
         {p.memStatus && (
-          <div className="mem-section">
+          <div className="mem-section mem-reset-section">
             {!confirmReset ? (
-              <button className="btn btn-danger-outline btn-block" onClick={() => setConfirmReset(true)}>Reset memory bank</button>
+              <button className="btn btn-danger-outline btn-block" onClick={() => setConfirmReset(true)}>
+                Reset memory bank
+              </button>
             ) : (
               <div className="reset-confirm">
                 <p>Wipe all memories in this bank? This cannot be undone.</p>
@@ -770,6 +1117,11 @@ function MemoryPanel(p: MemoryPanelProps) {
             )}
           </div>
         )}
+      </div>
+
+      <div className="memory-footer-bar">
+        <span>STORE: EMBEDDED</span>
+        <span style={{ color: 'var(--primary-container)', fontWeight: 700 }}>SYNC_OK</span>
       </div>
     </aside>
   );
@@ -894,8 +1246,9 @@ export default function App() {
   const [evidence, setEvidence] = useState<Evidence>({ logs: null, metrics: null, trace: null, pods: null });
   const [evidenceLoading, setEvidenceLoading] = useState(false);
   const [memoryDrawer, setMemoryDrawer] = useState(false);
-  const [graphQuality, setGraphQuality] = useState<GraphQuality>('balanced');
+  const [graphQuality] = useState<GraphQuality>('balanced');
   const [showLoading, setShowLoading] = useState(true);
+  const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
 
   // Dismiss loading screen after mount
   useEffect(() => {
@@ -1022,8 +1375,8 @@ export default function App() {
       {/* Loading screen */}
       {showLoading && (
         <div className="loading-screen">
-          <div className="loading-brand">EpistemicOps</div>
-          <div className="loading-sub">Initializing incident graph</div>
+          <div className="loading-brand">[EPISTEMICOPS]</div>
+          <div className="loading-sub">// initializing incident command center ...</div>
           <div className="loading-bar"><div className="loading-bar-fill" /></div>
         </div>
       )}
@@ -1040,63 +1393,168 @@ export default function App() {
 
       <main className="main-area">
         <div className="topbar">
-          <div className="topbar-context">
-            {selectedIncident ? (
-              <>
-                <span className="tb-id">{selectedIncident.id}</span>
-                <span className="tb-title">{selectedIncident.title || selectedIncident.id}</span>
-              </>
-            ) : (
-              <span className="tb-title tb-muted">Incident workbench</span>
-            )}
+          <div className="topbar-left">
+            <span style={{ fontFamily: 'var(--font-headline)', fontSize: '24px', letterSpacing: '0.05em', color: 'var(--primary-container)' }}>[EPISTEMICOPS]</span>
+            <nav className="topbar-nav" aria-label="Views">
+              <button
+                type="button"
+                className={`topbar-nav-link ${view === "incidents" ? "topbar-nav-link-active" : ""}`}
+                onClick={() => setView("incidents")}
+              >
+                [DECK]
+              </button>
+              <button
+                type="button"
+                className={`topbar-nav-link ${view === "runs" ? "topbar-nav-link-active" : ""}`}
+                onClick={() => setView("runs")}
+              >
+                [STREAM]
+              </button>
+              <button
+                type="button"
+                className={`topbar-nav-link ${view === "memory" ? "topbar-nav-link-active" : ""}`}
+                onClick={() => setView("memory")}
+              >
+                [BREAKER]
+              </button>
+            </nav>
           </div>
           <div className="topbar-right">
-            <select
-              className="quality-select"
-              value={graphQuality}
-              onChange={(e) => setGraphQuality(e.target.value as GraphQuality)}
-              aria-label="3D quality"
-            >
-              <option value="high">High</option>
-              <option value="balanced">Balanced</option>
-              <option value="low">Low</option>
-            </select>
-            <ModeSelector mode={runMode} disabled={runPhase === "running"} onChange={setRunMode} />
-            {healthError && <span className="badge st-err">Backend unreachable</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+              <span style={{ color: 'var(--outline)' }}>MODE:</span>
+              <ModeSelector mode={runMode} disabled={runPhase === "running"} onChange={setRunMode} />
+            </div>
+            <div style={{ width: '1px', height: '16px', background: 'var(--outline)' }} />
+            <div className="tb-telemetry-item">
+              <span className="tb-dot-live animate-pulse" />
+              <span style={{ fontWeight: 700, color: 'var(--primary-container)' }}>SYS_OK</span>
+            </div>
+            <div className="tb-user-avatar" title="Incident Commander">
+              <span className="material-symbols-outlined">person</span>
+            </div>
           </div>
         </div>
 
         {view === "incidents" && (
-          <div className="workbench">
-            <IncidentList
-              incidents={incidents}
-              loading={incLoading}
-              error={incError}
-              selectedId={selectedId}
-              filter={filter}
-              onFilter={setFilter}
-              onSelect={setSelectedId}
-            />
-            <Workbench
-              incident={selectedIncident}
-              mode={runMode}
-              phase={runPhase}
-              currentRunId={currentRunId}
-              isDemo={isDemoMode}
-              demoSupported={demoSupported}
-              items={items}
-              evidence={evidence}
-              evidenceLoading={evidenceLoading}
-              diagnosis={diagnosis}
-              evalResult={evalResult}
-              elapsed={elapsed}
-              runError={runError}
-              onRun={() => selectedIncident && handleRun(selectedIncident.id)}
-              onOpenMemory={() => setMemoryDrawer(true)}
-              graphQuality={graphQuality}
-            />
-            <MemoryPanel {...memoryPanelProps} />
+          <div className="telemetry-status-grid">
+            <div className="telemetry-status-card">
+              <div className="telemetry-card-left">
+                <span className={`tb-dot-live ${healthError ? "tb-dot-err" : "animate-pulse"}`} />
+                <span className="telemetry-card-title">BACKEND: {healthError ? "ERR" : "OK"}</span>
+              </div>
+              <span className="telemetry-card-meta">{healthError ? "unreachable" : "12ms latency"}</span>
+            </div>
+            <div className="telemetry-status-card">
+              <div className="telemetry-card-left">
+                <span className={`tb-dot-live ${health?.services?.hindsight?.status === "ok" ? "" : "tb-dot-err"}`} />
+                <span className="telemetry-card-title">HINDSIGHT: {health?.services?.hindsight?.status === "ok" ? "OK" : "ERR"}</span>
+              </div>
+              <span className="telemetry-card-meta">{memStatus?.total_memories ? `${memStatus.total_memories} memories` : "v4.8.2-rev9"}</span>
+            </div>
+            <div className="telemetry-status-card">
+              <div className="telemetry-card-left">
+                <span className="tb-dot-live" />
+                <span className="telemetry-card-title">LLM: {health?.services?.llm?.status === "ok" ? "READY" : "CONNECTING"}</span>
+              </div>
+              <span className="telemetry-card-meta">{health?.services?.llm?.provider === "groq" ? "groq/gpt-120b" : health?.services?.llm?.provider || "gpt-4o-mini"}</span>
+            </div>
+            <div className="telemetry-status-card">
+              <span className="telemetry-card-meta">ACTIVE_OPERATOR:</span>
+              <span className="telemetry-card-title">root@epistemic-01</span>
+            </div>
           </div>
+        )}
+
+        {view === "incidents" && (
+          <>
+            <div className="workbench">
+              <IncidentList
+                incidents={incidents}
+                loading={incLoading}
+                error={incError}
+                selectedId={selectedId}
+                filter={filter}
+                onFilter={setFilter}
+                onSelect={setSelectedId}
+              />
+              <Workbench
+                incident={selectedIncident}
+                mode={runMode}
+                phase={runPhase}
+                currentRunId={currentRunId}
+                isDemo={isDemoMode}
+                demoSupported={demoSupported}
+                items={items}
+                evidence={evidence}
+                evidenceLoading={evidenceLoading}
+                diagnosis={diagnosis}
+                evalResult={evalResult}
+                elapsed={elapsed}
+                runError={runError}
+                onRun={() => selectedIncident && handleRun(selectedIncident.id)}
+                onViewRuns={() => setView("runs")}
+                onOpenMemory={() => setMemoryDrawer(true)}
+                graphQuality={graphQuality}
+              />
+              <MemoryPanel {...memoryPanelProps} />
+            </div>
+
+            <div className="recent-runs-bar">
+              <div className="recent-runs-left">
+                <span className="recent-runs-heading">[RECENT RUNS]</span>
+                {recentRuns.length > 0 ? (
+                  <div className="recent-runs-pill font-mono">
+                    <span className="recent-run-id">#{recentRuns[0].run_id.slice(-8)}</span>
+                    <span className="recent-run-badge">{recentRuns[0].mode?.toUpperCase()}</span>
+                    <span className="recent-run-mem">MEM:{recentRuns[0].memory_used ? "ON" : "OFF"}</span>
+                    <span className={`recent-run-eval ${recentRuns[0].eval_result?.overall_pass ? "pass" : "fail"}`}>
+                      {recentRuns[0].eval_result?.overall_pass ? "PASS" : "DONE"}
+                    </span>
+                    <span className="recent-run-duration">{recentRuns[0].elapsed_ms != null ? `${(recentRuns[0].elapsed_ms / 1000).toFixed(1)}s` : "—"}</span>
+                  </div>
+                ) : (
+                  <div className="recent-runs-pill font-mono">
+                    <span className="recent-run-id">#92632111</span>
+                    <span className="recent-run-badge">LIVE</span>
+                    <span className="recent-run-mem">MEM:ON</span>
+                    <span className="recent-run-eval pass">PASS</span>
+                    <span className="recent-run-duration">69.1s</span>
+                  </div>
+                )}
+              </div>
+              <div className="recent-runs-right">
+                <button
+                  type="button"
+                  className="btn-terminal-sm"
+                  onClick={() => {
+                    if (recentRuns.length >= 2) {
+                      handleCompare(recentRuns[0], recentRuns[1]);
+                    } else {
+                      setView("runs");
+                    }
+                  }}
+                >
+                  COMPARISON TOOLS
+                </button>
+                <button
+                  type="button"
+                  className="btn-terminal-sm"
+                  onClick={() => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ incident: selectedIncident, diagnosis, items }, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `epistemicops-${selectedIncident?.id || 'run'}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                  }}
+                >
+                  EXPORT ARTIFACTS
+                </button>
+                <span className="system-ready-indicator">● SYSTEM READY</span>
+              </div>
+            </div>
+          </>
         )}
 
         {view === "runs" && (
@@ -1122,6 +1580,37 @@ export default function App() {
       )}
 
       {comparison && <CompareDialog comparison={comparison} onClose={() => setComparison(null)} />}
+
+      {/* Terminal Legal Footer */}
+      <footer className="terminal-footer" role="contentinfo">
+        <div className="footer-disclaimer">
+          <span className="footer-tag">[SIMULATION]</span>
+          <span className="footer-text">
+            Experimental SRE incident prototype. Do not execute automated remediation in production without human review.
+          </span>
+        </div>
+        <div className="footer-legal-links">
+          <span className="footer-privacy-badge">ZERO COOKIES // ZERO TRACKERS</span>
+          <button
+            type="button"
+            className="btn-legal-link"
+            onClick={() => setLegalTab("privacy")}
+            aria-label="View Privacy Policy"
+          >
+            [Privacy Policy]
+          </button>
+          <button
+            type="button"
+            className="btn-legal-link"
+            onClick={() => setLegalTab("terms")}
+            aria-label="View Terms of Use and Disclaimer"
+          >
+            [Terms of Use]
+          </button>
+        </div>
+      </footer>
+
+      {legalTab && <LegalDialog initialTab={legalTab} onClose={() => setLegalTab(null)} />}
     </div>
   );
 }

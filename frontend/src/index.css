@@ -1,159 +1,266 @@
-/* EpistemicOps — Dark Observability Command Center
-   Design tokens + base styles. Every token maps to a product concept. */
+/* EpistemicOps — Terminal Command Center Design System
+   Source of Truth: Stitch Project 3861622385869168279
+   "EpistemicOps // Incident Command Center" — Dark Terminal / CRT aesthetic */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400..700,0..1,-50..200&display=swap');
 
 :root {
-  /* ── Surfaces ─────────────────────────────────────────────── */
-  --bg:           #070A0F;
-  --surface:      #0D1118;
-  --surface-2:    #111722;
-  --surface-3:    #161D2A;
-  --surface-hover: #1A2233;
-  --surface-active: #1E2840;
+  /* ── Surface & Canvas (Dark Terminal) ─────────────────────── */
+  --bg:                        #131313;
+  --canvas:                    #131313;
+  --surface:                   #131313;
+  --surface-dim:               #131313;
+  --surface-bright:            #3a3939;
+  --surface-container-lowest:  #0e0e0e;
+  --surface-container-low:     #1c1b1b;
+  --surface-container:         #201f1f;
+  --surface-container-high:    #2a2a2a;
+  --surface-container-highest: #353534;
+  --surface-variant:           #353534;
 
-  /* Legacy aliases for existing components */
-  --canvas:        var(--bg);
-  --surface-subtle: var(--surface-2);
+  /* Aliases */
+  --surface-2:                 var(--surface-container);
+  --surface-3:                 var(--surface-container-high);
+  --surface-hover:             var(--surface-container-high);
+  --surface-active:            var(--surface-container-highest);
+  --surface-low:               var(--surface-container-low);
+  --surface-high:              var(--surface-container-high);
+  --surface-highest:           var(--surface-container-highest);
+  --surface-lowest:            var(--surface-container-lowest);
+  --surface-subtle:            var(--surface-container-low);
 
-  /* ── Borders ──────────────────────────────────────────────── */
-  --border:        #1E2733;
-  --border-strong:  #2A3545;
-  --border-focus:   #6366F1;
+  /* ── Typography & Text Colors ─────────────────────────────── */
+  --primary-text:              #eeffe2;
+  --secondary-text:            #baccaf;
+  --muted-text:                #85967c;
+  --on-surface:                #e5e2e1;
+  --on-surface-variant:        #baccaf;
+  --text:                      var(--primary-text);
+  --text-secondary:            var(--secondary-text);
+  --text-muted:                var(--muted-text);
 
-  /* ── Text ─────────────────────────────────────────────────── */
-  --text:           #F5F7FA;
-  --text-secondary: #9AA6B2;
-  --text-muted:     #667384;
-  --text-inverse:   #070A0F;
+  /* ── Borders & Outlines ───────────────────────────────────── */
+  --border:                    #1f521f;
+  --border-strong:             #33ff00;
+  --border-subtle:             rgba(31, 82, 31, 0.5);
+  --outline:                   #85967c;
+  --outline-variant:           #3c4b35;
 
-  /* ── Brand ───────────────────────────────────────────────── */
-  --indigo:        #6366F1;
-  --indigo-hover:  #5558E3;
-  --indigo-subtle: rgba(99, 102, 241, 0.10);
-  --indigo-glow:   rgba(99, 102, 241, 0.25);
-  --cyan:          #22D3EE;
-  --cyan-subtle:   rgba(34, 211, 238, 0.10);
+  /* ── Brand & Accents ──────────────────────────────────────── */
+  --primary:                   #eeffe2;
+  --primary-container:         #33ff00;
+  --on-primary:                #053900;
+  --on-primary-container:      #127100;
+  --primary-fixed:             #79ff5a;
+  --primary-fixed-dim:         #2de500;
 
-  /* Legacy alias */
-  --accent:        var(--indigo);
-  --accent-hover:  var(--indigo-hover);
-  --accent-subtle: var(--indigo-subtle);
+  --secondary:                 #ffd393;
+  --secondary-container:       #fdaf00;
+  --on-secondary:              #432c00;
+  --on-secondary-container:    #694600;
 
-  /* ── Operational ──────────────────────────────────────────── */
-  --success:       #22C55E;
-  --success-subtle: rgba(34, 197, 94, 0.10);
-  --warning:       #F59E0B;
-  --warning-subtle: rgba(245, 158, 11, 0.10);
-  --danger:        #EF4444;
-  --danger-subtle: rgba(239, 68, 68, 0.10);
-  --info:          #38BDF8;
-  --info-subtle:   rgba(56, 189, 248, 0.10);
-  --memory:        #A78BFA;
-  --memory-subtle: rgba(167, 139, 250, 0.10);
+  --terracotta:                #33ff00;
+  --oxblood:                   #33ff00;
+  --copper:                    #fdaf00;
+  --dusty-plum:                #85967c;
+  --sage:                      #3c4b35;
+  --warm-teal:                 #33ff00;
 
-  /* ── Severity ────────────────────────────────────────────── */
-  --sev-critical:  var(--danger);
-  --sev-high:      var(--warning);
-  --sev-medium:    var(--info);
-  --sev-low:       var(--text-muted);
+  /* ── Operational & Semantic Status ────────────────────────── */
+  --critical:                  #ff4444;
+  --error:                     #ffb4ab;
+  --error-container:           #93000a;
+  --on-error-container:        #ffdad6;
+  --on-error:                  #690005;
+  --danger:                    #ff4444;
 
-  /* ── Spacing (4px base) ──────────────────────────────────── */
-  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
-  --s5: 24px; --s6: 32px; --s7: 40px; --s8: 48px; --s9: 64px;
+  --warning:                   #fdaf00;
+  --success:                   #33ff00;
+  --info:                      #79ff5a;
+  --hindsight-memory:          #33ff00;
+  --memory:                    #33ff00;
+  --tertiary:                  #33ff00;
 
-  /* ── Radius ───────────────────────────────────────────────── */
-  --r-control: 6px;
-  --r-panel:   8px;
-  --r-pill:    999px;
+  /* 3D Operational aliases */
+  --indigo:                    var(--primary-container);
+  --indigo-hover:              #28b800;
+  --cyan:                      var(--primary-fixed);
+  --root-cause:                var(--error);
 
-  /* ── Elevation ───────────────────────────────────────────── */
-  --shadow-pop: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.2);
-  --shadow-dialog: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(99, 102, 241, 0.15);
-  --shadow-glow-indigo: 0 0 20px rgba(99, 102, 241, 0.15);
-  --shadow-glow-cyan:   0 0 20px rgba(34, 211, 238, 0.1);
+  /* ── Layout Grid Dimensions ───────────────────────────────── */
+  --sidebar-w:  0px;
+  --list-w:     280px;
+  --memory-w:   300px;
 
-  /* ── Typography ───────────────────────────────────────────── */
-  --font-ui:   "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+  /* ── Spacing Scale ────────────────────────────────────────── */
+  --space-xs: 0.125rem;  /* 2px */
+  --space-sm: 0.25rem;   /* 4px */
+  --space-md: 0.5rem;    /* 8px */
+  --gutter:   0.5rem;    /* 8px */
+  --space-lg: 1.0rem;    /* 16px */
+  --space-xl: 1.5rem;    /* 24px */
+  --margin:   1.0rem;    /* 16px */
 
-  --t-title:   20px;
-  --t-section: 14px;
+  --s1: 2px;  --s2: 4px;  --s3: 8px; --s4: 12px;
+  --s5: 16px; --s6: 24px; --s7: 32px; --s8: 40px;
+
+  /* ── Shapes & Radii (Terminal = sharp corners) ────────────── */
+  --rounded-sm: 0px;
+  --rounded-md: 0px;
+  --rounded-lg: 0px;
+  --rounded-xl: 0px;
+  --rounded-full: 0px;
+
+  --r-control: 0px;
+  --r-panel:   0px;
+  --r-pill:    0px;
+
+  /* ── Typography Scale ─────────────────────────────────────── */
+  --font-ui:       "JetBrains Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+  --font-mono:     "JetBrains Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+  --font-headline: "VT323", monospace;
+  --font-body:     "JetBrains Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+
+  --t-headline-lg: 36px;
+  --t-headline-md: 24px;
+  --t-headline-sm: 18px;
+  --t-body-lg:     15px;
+  --t-body-md:     13px;
+  --t-body-sm:     11px;
+  --t-mono-md:     13px;
+  --t-mono-sm:     11px;
+  --t-label-md:    10px;
+
+  --t-title:   24px;
+  --t-section: 15px;
   --t-body:    13px;
-  --t-meta:    12px;
-  --t-micro:   11px;
+  --t-meta:    11px;
+  --t-micro:   10px;
 
-  /* ── Motion ───────────────────────────────────────────────── */
-  --ease:     cubic-bezier(0.2, 0, 0.2, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --dur:      140ms;
-  --dur-slow: 240ms;
-  --dur-fast: 80ms;
+  /* ── Semantic "Subtle" Backgrounds ────────────────────────── */
+  --danger-subtle:  rgba(255, 68, 68, 0.10);
+  --warning-subtle: rgba(253, 175, 0, 0.10);
+  --success-subtle: rgba(51, 255, 0, 0.10);
+  --info-subtle:    rgba(121, 255, 90, 0.10);
+  --memory-subtle:  rgba(51, 255, 0, 0.10);
+  --cyan-subtle:    rgba(51, 255, 0, 0.10);
 
-  /* ── Z-index ──────────────────────────────────────────────── */
-  --z-base:     1;
-  --z-sticky:   10;
-  --z-dropdown: 20;
-  --z-drawer:   30;
-  --z-overlay:  40;
-  --z-dialog:   50;
-  --z-toast:    60;
+  /* ── Focus, Motion & Animation ────────────────────────────── */
+  --ring:             var(--primary-container);
+  --ring-offset:      var(--bg);
+  --dur:              0ms;
+  --ease:             linear;
+  --transition-fast:  0ms linear;
+  --transition-norm:  0ms linear;
 
-  /* ── Layout ───────────────────────────────────────────────── */
-  --sidebar-w: 220px;
-  --list-w:    300px;
-  --memory-w:  340px;
-  --topbar-h:  48px;
+  /* ── Shadows (Terminal has no shadows — just borders) ──────── */
+  --shadow-subtle:    none;
+  --shadow-card:      none;
+  --shadow-elevated:  none;
+  --shadow-pop:       none;
+  --shadow-dialog:    0 0 40px rgba(51, 255, 0, 0.08);
+
+  /* ── Z-Index Layers ───────────────────────────────────────── */
+  --z-sticky:  10;
+  --z-drawer:  40;
+  --z-dialog:  50;
 }
 
-/* ── Base resets ────────────────────────────────────────────── */
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; }
+/* Base resets & typography */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg);
+  color: var(--primary-text);
   font-family: var(--font-ui);
-  font-size: var(--t-body);
-  line-height: 1.5;
-  color: var(--text);
-  background: var(--bg);
+  font-size: 13px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button {
-  font-family: inherit;
-  font-size: inherit;
-  cursor: pointer;
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── Focus ─────────────────────────────────────────────────── */
+/* CRT Scanline Overlay */
+#root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
+    linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+  background-size: 100% 2px, 3px 100%;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  vertical-align: middle;
+}
+
+/* Monospace text */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Focus outline */
 :focus-visible {
-  outline: 2px solid var(--indigo);
-  outline-offset: 2px;
-  border-radius: var(--r-control);
+  outline: 1px solid var(--primary-container);
+  outline-offset: 0px;
 }
 
-::selection { background: var(--indigo-subtle); color: var(--text); }
-
-/* ── Scrollbars ────────────────────────────────────────────── */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
+/* Custom Scrollbars — hidden like terminal */
+::-webkit-scrollbar {
+  display: none;
 }
-*::-webkit-scrollbar { width: 6px; height: 6px; }
-*::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 999px;
-}
-*::-webkit-scrollbar-track { background: transparent; }
 
-/* ── Reduced motion ────────────────────────────────────────── */
+/* Pulse and Ping Animations */
+@keyframes stitchPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes stitchPing {
+  0% { transform: scale(1); opacity: 0.8; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes terminalBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

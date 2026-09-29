@@ -5,8 +5,8 @@
       "service": "payment-service",
       "category": null,
       "severity": "critical",
-      "retained_at": "2026-09-28T18:04:20.151096Z",
-      "approval_status": "rejected",
+      "retained_at": "2026-09-29T06:26:58.932505Z",
+      "approval_status": "pending",
       "tags": [
         "postmortem",
         "inc-002",
@@ -14,10 +14,10 @@
       ],
       "document_id": "inc-002",
       "evidence_refs": [
-        "heap memory grew from 310\u202fMB to 1650\u202fMB within hours and continued rising (memory_growth_mb_per_hour: 51)",
-        "GC runs at maximum frequency (214 full collections in last hour) but reclaims 0 bytes and leaves 18\u202f400 objects uncollected",
-        "pod restarts: 3 OOMKilled events within 4\u202fhours",
-        "high receipt generation count since deploy (1620 receipts) correlates with memory growth"
+        "Heap memory grew from 310\u202fMB to 1650\u202fMB within a few hours (logs and metrics show monotonic ~50\u202fMB/hour growth).",
+        "GC runs at maximum frequency (214 full collections in the last hour) but reclaims 0 bytes, indicating objects are retained.",
+        "Pod restarts: 3 OOMKilled events in 4\u202fhours (log timestamps).",
+        "High number of receipts generated since deploy (1620) and PDF receipt path active in all pods."
       ],
       "source_fixture": null
     },
@@ -26,7 +26,7 @@
       "service": "orders",
       "category": "bad_deploy",
       "severity": "critical",
-      "retained_at": "2026-09-28T18:14:22.624615Z",
+      "retained_at": "2026-09-29T06:25:20.196280Z",
       "approval_status": "pending",
       "tags": [
         "postmortem",
@@ -37,9 +37,52 @@
       "document_id": "inc-003",
       "evidence_refs": [
         "ERROR panic in checkoutHandler: nil pointer dereference (orders.v2.PriceQuote) -> HTTP 500",
-        "The error began immediately after revision\u202f12 rolled the image rlvr/orders:v2-broken, and the 5xx error rate spiked to 8%"
+        "Deployment of rlvr/orders:v2-broken (revision 12) coincides with spike to 8% 5xx error rate"
       ],
       "source_fixture": "011-bad_deploy_errors"
+    },
+    "inc-005": {
+      "incident_id": "inc-005",
+      "service": "catalog",
+      "category": "saturation",
+      "severity": "critical",
+      "retained_at": "2026-09-28T21:26:43.404594Z",
+      "approval_status": "approved",
+      "tags": [
+        "catalog",
+        "postmortem",
+        "saturation",
+        "inc-005"
+      ],
+      "document_id": "inc-005",
+      "evidence_refs": [
+        "ERROR CacheStampede: hit ratio dropped to 12% after FLUSHALL (log)",
+        "cache_keys_resident fell from 41820 (baseline) to 5210 (metrics)",
+        "multiple WARN logs showing concurrent cache GET misses for the same hot key with no coalescing",
+        "db_query_p99_ms spiked from 58\u202fms (baseline) to 740\u202fms and p99_latency_ms from 120\u202fms to 880\u202fms"
+      ],
+      "source_fixture": "009-cache_stampede"
+    },
+    "inc-001": {
+      "incident_id": "inc-001",
+      "service": "order-processing-api",
+      "category": null,
+      "severity": "high",
+      "retained_at": "2026-09-29T06:26:48.755856Z",
+      "approval_status": "pending",
+      "tags": [
+        "order-processing-api",
+        "postmortem",
+        "inc-001"
+      ],
+      "document_id": "inc-001",
+      "evidence_refs": [
+        "PostgreSQL reports max_connections reached (20/20 active)",
+        "order-api logs show connection pool exhausted and PoolTimeout errors",
+        "Metrics show connections_active equals connection_pool_size (20) with zero idle connections",
+        "p99 latency spikes to 12400\u202fms and error rate rises to 34.1\u202f%"
+      ],
+      "source_fixture": null
     }
   }
 }
