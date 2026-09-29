@@ -19,8 +19,8 @@ export HINDSIGHT_API_LLM_MAX_CONCURRENT="1"
 export HINDSIGHT_API_ENABLE_OBSERVATIONS="true"
 export HINDSIGHT_API_LLM_GROQ_SERVICE_TIER="on_demand"
 # Embeddings and Reranker providers for Hindsight
-# Configured for remote Gemini embeddings and RRF reranking (lightweight, zero local neural models)
-export HINDSIGHT_API_EMBEDDINGS_PROVIDER="${HINDSIGHT_API_EMBEDDINGS_PROVIDER:-gemini}"
+# Configured for remote Google/Gemini embeddings and RRF reranking (lightweight, zero local neural models)
+export HINDSIGHT_API_EMBEDDINGS_PROVIDER="${HINDSIGHT_API_EMBEDDINGS_PROVIDER:-google}"
 export HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL="${HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL:-gemini-embedding-001}"
 export HINDSIGHT_API_RERANKER_PROVIDER="${HINDSIGHT_API_RERANKER_PROVIDER:-rrf}"
 export HINDSIGHT_API_MODEL_INIT_TIMEOUT="1200"

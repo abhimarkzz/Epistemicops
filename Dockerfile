@@ -33,17 +33,17 @@ ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PORT=7860 \
-    HINDSIGHT_API_EMBEDDINGS_PROVIDER=gemini \
+    HINDSIGHT_API_EMBEDDINGS_PROVIDER=google \
     HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001 \
     HINDSIGHT_API_RERANKER_PROVIDER=rrf
 
 WORKDIR /app
 
-# Install Python dependencies as user
+# Install Python dependencies as user (explicitly pinned Hindsight version)
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/backend/requirements.txt && \
-    pip install --no-cache-dir 'hindsight-api-slim[embedded-db]' psycopg2-binary
+    pip install --no-cache-dir 'hindsight-api-slim[embedded-db]==0.10.1' psycopg2-binary
 
 # Copy application code
 COPY backend/ /app/backend/
