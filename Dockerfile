@@ -32,7 +32,10 @@ RUN useradd -m -u 1000 user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
-    PORT=7860
+    PORT=7860 \
+    HINDSIGHT_API_EMBEDDINGS_PROVIDER=gemini \
+    HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001 \
+    HINDSIGHT_API_RERANKER_PROVIDER=rrf
 
 WORKDIR /app
 
