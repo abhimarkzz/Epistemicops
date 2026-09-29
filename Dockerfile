@@ -40,7 +40,7 @@ WORKDIR /app
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/backend/requirements.txt && \
-    pip install --no-cache-dir 'hindsight-api-slim[local-onnx,embedded-db]' flashrank psycopg2-binary
+    pip install --no-cache-dir 'hindsight-api-slim[embedded-db]' psycopg2-binary
 
 # Copy application code
 COPY backend/ /app/backend/

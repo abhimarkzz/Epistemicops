@@ -596,7 +596,7 @@ EpistemicOps can be deployed as a publicly accessible demo web application with 
 - **Fast Setup (5 minutes):**
   1. Create a free database at [neon.tech](https://neon.tech/) and run `CREATE EXTENSION IF NOT EXISTS vector;`.
   2. Create a free Web Service on [render.com](https://render.com/) from your GitHub repository using environment **Docker**.
-  3. Set Environment Variables: `PORT=8000`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `HINDSIGHT_API_EMBEDDINGS_PROVIDER=gemini`, `HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001`, `HINDSIGHT_API_RERANKER_PROVIDER=none`, and `HINDSIGHT_API_DATABASE_URL` (your Neon connection string).
+  3. Set Environment Variables: `PORT=8000`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `HINDSIGHT_API_EMBEDDINGS_PROVIDER=gemini`, `HINDSIGHT_API_EMBEDDINGS_GEMINI_MODEL=gemini-embedding-001`, `HINDSIGHT_API_RERANKER_PROVIDER=rrf`, and `HINDSIGHT_API_DATABASE_URL` (your Neon connection string).
   4. Render builds and launches your public application with free automatic HTTPS!
 - **Detailed Step-by-Step Guide:** See [docs/NO_CARD_DEPLOYMENT.md](docs/NO_CARD_DEPLOYMENT.md).
 
