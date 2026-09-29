@@ -9,8 +9,8 @@ _ENV_FILE = Path(__file__).parent.parent / ".env"
 
 class Settings(BaseSettings):
     # LLM provider. "gemini" (default) or "groq". Groq is a free-tier option
-    # (recommended by the hackathon) and is selected automatically when a
-    # GROQ_API_KEY is present and no explicit provider is set.
+    # and is selected automatically when a GROQ_API_KEY is present and no
+    # explicit provider is set.
     llm_provider: str = ""
 
     # Gemini
