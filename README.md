@@ -1,185 +1,206 @@
 # EpistemOps
 
-An autonomous Site Reliability Engineering (SRE) incident-response agent powered by LangGraph, using **Vectorize Hindsight** as its persistent operational memory to recall and consolidate postmortem knowledge across outages.
+### SRE Incident Response + Persistent Memory
 
-**Quick links:**
-- [Live Demo](https://epistemicops.onrender.com)
-- [GitHub](https://github.com/abhimarkzz/Epistemops)
-- [Article](docs/ARTICLE_FINAL.md) *(Pending public platform URL — draft ready)*
-- [YouTube](docs/VIDEO_SCRIPT.md) *(Pending public upload — script ready)*
+An autonomous Site Reliability Engineering (SRE) incident-response agent that investigates microservice failures with LangGraph, retains structured postmortems in **Vectorize Hindsight**, and recalls verified operational knowledge during subsequent outages.
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![CI](https://github.com/abhimarkzz/Epistemops/actions/workflows/ci.yml/badge.svg)](https://github.com/abhimarkzz/Epistemops/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/Tests-152%20passed-success.svg)](backend/tests/)
+
+**[Live Demo](https://epistemicops.onrender.com)** · **[Article](docs/ARTICLE_FINAL.md)** · **[YouTube](https://www.youtube.com/watch?v=eACrRBxOAaU)** · **[Architecture](docs/architecture.md)** · **[Hindsight](docs/HINDSIGHT_EXPLANATION.md)** · **[Documentation](docs/)**
 
 ---
 
-## The Problem
+## Why this exists
 
-When a production microservice fails at 3 a.m., the slowest part of the resolution is rarely typing the command to fix it — it is reconstructing operational context. On-call engineers scramble across fragmented telemetry, past Slack threads, and tribal knowledge asking: *"Didn't the payment service exhaust its connection pool like this last month? What was the culprit query? Which deployment triggered it?"* 
+When a production microservice fails at 3 a.m., the slowest part of on-call response is rarely executing the remediation command — it is the remembering. 
 
-Stateless incident-response assistants do not solve this problem. Every time an outage occurs, a stateless LLM starts with an empty context window, re-inspecting logs and traces from zero and re-learning failure modes the engineering organization already paid to diagnose.
+On-call engineers scramble across disparate telemetry systems, fragmented postmortems, and closed tickets asking:
+- *"Didn't this payment service encounter connection pool exhaustion last month?"*
+- *"Which deployment triggered the 5xx cascade, and what was the culprit database query?"*
+- *"What was the verified rollback procedure?"*
 
-## The Idea
+Stateless incident assistants re-investigate every outage from scratch. They re-read raw logs, re-test the same hypotheses, and forget everything the moment the run ends.
 
-Stateless AI agents fail in operations because operational expertise is cumulative. Passing raw chat history into subsequent prompts is fragile, bounded by token limits, and lacks semantic indexing. 
+## The idea
 
-EpistemicOps pairs a bounded, acyclic LangGraph diagnostic agent with **Hindsight** — an agent memory layer. Rather than treating memory as an afterthought or conversational scratchpad, EpistemicOps records structured postmortems upon incident resolution, consolidates recurring patterns into a living **Microservice Resolution Runbook**, and semantically recalls past lessons when related alerts fire.
+Passing unbounded past chat logs into LLM context windows degrades reasoning, consumes high token counts, and lacks semantic indexing across microservice namespaces.
 
-## How EpistemOps Works
+EpistemicOps pairs a bounded, acyclic LangGraph agent with **Hindsight**, an agent memory layer. Rather than treating memory as an ephemeral chat history, EpistemicOps:
+1. Retains structured, log-scrubbed postmortems into an isolated vector memory bank upon resolution.
+2. Synthesizes recurring failure modes into a self-updating **Microservice Resolution Runbook**.
+3. Recalls past incident knowledge in sub-100ms vector search when related alert signatures fire.
 
-1. **Incident Ingestion:** The agent receives an alert with service identity, error rate spikes, and symptom metadata.
-2. **Memory Query (Recall):** Before executing diagnostic queries, the agent queries Hindsight for semantically relevant past postmortems and playbooks.
-3. **Investigation:** The agent invokes read-only evidence tools (`get_logs`, `get_metrics`, `get_trace`, `get_pod_status`) to gather live cluster telemetry.
-4. **Diagnosis & Validation:** An LLM synthesizes root cause, evidence citations, and safe remediation steps into a structured, validated schema.
-5. **Postmortem Retention (Retain):** The validated diagnosis is formatted as a structured postmortem and asynchronously retained in Hindsight.
-6. **Consolidation:** Hindsight synthesizes retained postmortems into an evolving runbook (Mental Model) to inform subsequent investigations.
-
-## Why Hindsight Is Central
-
-Hindsight is the foundational operational spine of EpistemicOps:
-
-- **RETAIN:** After incident validation, `MemoryService.retain_incident()` writes a structured postmortem directly to the `epistemic-sre` memory bank via `client.aretain()`. Raw, noisy log lines are stripped; only synthesized findings, evidence keywords, and remediation steps are preserved.
-- **RECALL:** At the start of an incident, `query_incident_patterns()` performs semantic vector recall (`client.arecall()`) to fetch prior failure signatures. Because vector recall runs without an LLM invocation, memory retrieval is immune to LLM rate limits and quotas.
-- **Consolidation & Reflection:** Hindsight's background observation engine synthesizes cross-incident observations, identifying recurring systemic bottlenecks across separate services.
-- **Mental Model / Runbook:** Hindsight organizes retained postmortems into the **Microservice Resolution Runbook** (`microservice-resolution-runbook`), tracking live operational procedures that update dynamically as new incidents are diagnosed.
-
-## Cold → Retain → Consolidate → Warm
+## What happens
 
 ```mermaid
-flowchart TD
-    subgraph ColdRun["1. Cold Incident (First Encounter)"]
-        A1[Incoming Alert inc-001] --> B1[Query Hindsight]
-        B1 -->|No match found| C1[Full Telemetry Investigation]
-        C1 --> D1[Root Cause Diagnosis]
-    end
+flowchart LR
+    A[Cold Incident] -->|Investigate & Diagnose| B[Postmortem]
+    B -->|Hindsight RETAIN| C[(Memory Bank)]
+    C -->|Observation Engine| D[Consolidate Runbook]
+    D -->|Hindsight RECALL| E[Warm Incident]
+    E -->|Memory-Informed| F[Faster Resolution]
 
-    subgraph RetainPhase["2. Postmortem Retention"]
-        D1 --> E1[Structured Postmortem]
-        E1 -->|client.aretain| F1[(Hindsight Bank: epistemic-sre)]
-    end
-
-    subgraph ConsolidatePhase["3. Knowledge Consolidation"]
-        F1 --> G1[Hindsight Observation Engine]
-        G1 --> H1[Microservice Resolution Runbook]
-    end
-
-    subgraph WarmRun["4. Warm Incident (Related Outage)"]
-        A2[Related Alert inc-003] --> B2[Query Hindsight]
-        H1 -.->|client.arecall| B2
-        B2 -->|Prior postmortem recalled| C2[Informed Investigation with Memory Context]
-        C2 --> D2[Targeted Diagnosis citing prior fix]
-    end
-
-    ColdRun --> RetainPhase
-    RetainPhase --> ConsolidatePhase
-    ConsolidatePhase --> WarmRun
-
-    classDef primary fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
-    classDef memory fill:#1e1e38,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc;
-    class A1,C1,D1,A2,C2,D2 primary;
-    class B1,E1,F1,G1,H1,B2 memory;
+    classDef stage fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef mem fill:#311042,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
+    class A,B,E,F stage;
+    class C,D mem;
 ```
 
-## Baseline
+1. **Cold Incident:** A new alert arrives with no prior memory. The agent investigates telemetry from scratch, establishes root cause, and resolves the issue.
+2. **Retain:** The verified diagnosis is formatted as a structured postmortem and retained asynchronously in Hindsight.
+3. **Consolidate:** Hindsight's observation engine updates the living Microservice Resolution Runbook.
+4. **Warm Recall:** When a similar failure pattern emerges, Hindsight recalls prior postmortems before telemetry exploration begins, priming the diagnostic prompt with proven remediation playbooks.
 
-To evaluate the tangible value of memory scientifically, EpistemicOps includes a dedicated **Baseline Mode**:
+## Why Hindsight is central
 
-- Setting `skip_memory=True` (`?baseline=true`) disables Hindsight retrieval.
-- The agent investigates the incident purely from first principles without historical context.
-- Running the same incident fixture in Baseline (cold control) and Live (memory-enabled) allows side-by-side comparison of elapsed investigation time, tool invocations, confidence scores, and evaluator ground-truth fidelity.
+Hindsight is the foundational operational memory of EpistemicOps, not an optional RAG add-on:
+
+- **Retain (`aretain`):** Writes synthesized postmortem records (service, failure category, root cause, evidence keywords, remediation) into the isolated `epistemic-sre` bank. Raw logs are discarded to keep vectors compact and high-signal.
+- **Recall (`arecall`):** Uses semantic vector similarity to surface past incidents sharing alert symptoms. Vector recall requires **zero LLM invocations**, operating under 80ms latency and immune to LLM rate limits.
+- **Consolidation / Reflection:** Background observation routines group related postmortems, extracting systemic cross-service patterns.
+- **Mental Model / Runbook:** Maintains the **Microservice Resolution Runbook** (`microservice-resolution-runbook`) as an evolving, human-readable operational artifact.
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    User([Browser Client])
+    User([SRE Engineer / Browser])
 
-    subgraph Frontend["Frontend Layer (React 18 + Vite + Three.js)"]
+    subgraph Frontend["Frontend (React 18 + Vite + Three.js)"]
         UI[3D Command Center UI]
-        Graph[Interactive Epistemic Topology Graph]
+        WebGLScene[Interactive Epistemic Topology Graph]
         RunbookUI[Runbook & Approval Panel]
         CompareUI[Learning Loop Comparison Bar]
     end
 
-    subgraph Backend["Backend Layer (FastAPI)"]
-        API[FastAPI Application :8000]
-        SSE[SSE Stream Engine]
+    subgraph Backend["Backend Application (FastAPI :8000)"]
+        API[FastAPI Router & Static Host]
+        SSEHub[Server-Sent Events Streamer]
         RunStore[(In-Memory Run Store)]
-        Eval[Deterministic Keyword Evaluator]
+        EvalEngine[Deterministic Keyword Evaluator]
     end
 
-    subgraph AgentLayer["Agent Layer (LangGraph)"]
-        GraphEngine[LangGraph StateGraph Engine]
-        Tools[Read-Only Evidence Tools]
-        LLM[LLM Provider: Groq / Gemini]
+    subgraph AgentDAG["LangGraph State Machine Engine"]
+        LoadNode[load_incident]
+        MemNode[query_memory]
+        InvNode[investigate]
+        AnaNode[analyze]
+        ValNode[validate]
+        ResNode[produce_result]
+        RetNode[retain_postmortem]
     end
 
-    subgraph Fixtures["Deterministic Fixtures (data/)"]
-        Incidents[(Incident Fixtures)]
-        DemoEvents[(Pre-recorded Demo Replays)]
+    subgraph TelemetryEngine["Read-Only Telemetry Layer"]
+        FixtureSvc[FixtureService]
+        Tools[Evidence Tools: logs, metrics, trace, pods]
+        DataStore[("Synthetic Incident Fixtures (data/)")]
     end
 
-    subgraph MemoryLayer["Persistent Memory (Vectorize Hindsight)"]
+    subgraph LLMTier["Diagnostic LLM Tier"]
+        Groq[Groq API: openai/gpt-oss-120b]
+        Gemini[Optional: gemini-3.8-flash]
+    end
+
+    subgraph MemorySubsystem["Persistent Memory (Vectorize Hindsight v0.10.1)"]
         HSDaemon[Hindsight Native Daemon :8888]
-        Embeddings[Local ONNX multilingual-e5-small]
-        Reranker[RRF Reciprocal Rank Fusion]
-        DB[(Neon Serverless PostgreSQL + pgvector)]
+        ONNXEngine[In-Process ONNX multilingual-e5-small]
+        RRFEngine[Reciprocal Rank Fusion Reranker]
+        MentalModel[(Microservice Resolution Runbook)]
+        NeonDB[(Neon Serverless PostgreSQL + pgvector)]
     end
 
-    User <-->|HTTP / REST| UI
-    User <-->|SSE Stream| SSE
-    UI --- Graph
+    User <-->|HTTP / REST| API
+    User <-->|SSE Stream| SSEHub
+    UI --- WebGLScene
     UI --- RunbookUI
     UI --- CompareUI
 
-    UI -->|POST /api/investigate| API
-    API --> GraphEngine
-    GraphEngine -->|Read Telemetry| Tools
-    Tools --> Incidents
-    GraphEngine -->|Inference| LLM
-    GraphEngine <-->|Recall & Retain| HSDaemon
+    API --> AgentDAG
+    AgentDAG --> Tools
+    Tools --> FixtureSvc
+    FixtureSvc --> DataStore
 
-    HSDaemon --> Embeddings
-    HSDaemon --> Reranker
-    HSDaemon <-->|Store & Query Vectors| DB
+    AgentDAG <--> LLMTier
+    AgentDAG <-->|Vector Recall & Retain| HSDaemon
+
+    HSDaemon --> ONNXEngine
+    HSDaemon --> RRFEngine
+    HSDaemon <--> MentalModel
+    HSDaemon <--> NeonDB
 
     API --> RunStore
-    API --> Eval
-    API -.->|Replay Mode| DemoEvents
-
-    classDef client fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#e2e8f0;
-    classDef srv fill:#1e1b4b,stroke:#818cf8,stroke-width:1px,color:#e2e8f0;
-    classDef mem fill:#311042,stroke:#c084fc,stroke-width:1px,color:#e2e8f0;
-    class User,UI,Graph,RunbookUI,CompareUI client;
-    class API,SSE,RunStore,Eval,GraphEngine,Tools,LLM,Incidents,DemoEvents srv;
-    class HSDaemon,Embeddings,Reranker,DB mem;
+    API --> EvalEngine
 ```
 
-## Key Features
+## Memory lifecycle
 
-- **Autonomous SRE Investigation:** Investigates microservice outages across logs, metrics, distributed traces, and pod health tables via an acyclic LangGraph workflow.
-- **Persistent Hindsight Memory Layer:** Retains postmortems and recalls prior incident resolutions without relying on ephemeral chat histories.
-- **Evolving Microservice Runbook:** Maintains a self-updating Hindsight Mental Model reflecting proven remediation playbooks.
-- **Human-in-the-Loop Memory Governance:** Postmortem records require explicit engineer approval before higher trust weighting is applied.
-- **Side-by-Side Learning Loop Comparison:** Directly compares baseline (memory-off) versus warm (memory-on) runs across wall-clock latency, tool calls, and ground-truth evidence overlap.
-- **Zero-External-API Embedding Engine:** Uses in-process ONNX `multilingual-e5-small` embeddings and reciprocal rank fusion (`rrf`), removing external embedding API dependencies and costs.
-- **Air-Gapped Telemetry Safety:** All tools operate on strictly read-only simulated cluster fixtures. Zero shell commands, write APIs, or mutating actions are allowed.
-- **Deterministic Replay Demo Mode:** Includes verified, pre-recorded SSE event streams for deterministic demonstration when external network access is offline.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor SRE as On-Call Engineer
+    participant UI as Command Center
+    participant Agent as LangGraph Agent
+    participant Memory as Hindsight (:8888)
+    participant Runbook as Resolution Runbook
 
-## Tech Stack
+    Note over SRE,Runbook: Phase 1: Cold Run (inc-003: Bad Deployment Orders)
+    SRE->>UI: Select inc-003 & Click Run (Live Mode)
+    UI->>Agent: Stream investigation
+    Agent->>Memory: query_memory("service=orders category=bad_deploy")
+    Memory-->>Agent: found=false (cold)
+    Agent->>Agent: Collect telemetry & diagnose root cause
+    Agent->>Memory: retain_incident(document_id=inc-003)
+    Memory-->>Agent: Postmortem queued
 
-- **Agent Framework:** LangGraph (`>=0.2.60`), LangChain Core (`>=0.3.0`)
-- **Backend:** FastAPI (`>=0.115.0`), Uvicorn (`>=0.30.0`), Pydantic v2, HTTPX, sse-starlette
-- **LLM Providers:** Groq (`langchain-groq`, default: `openai/gpt-oss-120b`), optional Google Gemini (`gemini-3.8-flash`)
-- **Memory Engine:** Vectorize Hindsight API v0.10.1 (`hindsight-client`, `hindsight-api-slim`)
-- **Embeddings & Reranking:** Local ONNX runtime (`intfloat/multilingual-e5-small`, 384 dimensions), Reciprocal Rank Fusion (`rrf`)
+    Note over SRE,Runbook: Phase 2: Consolidation & Governance
+    SRE->>UI: Review postmortem & click Approve
+    UI->>Memory: Trigger runbook refresh
+    Memory->>Runbook: Consolidate rollback playbook into Runbook
+
+    Note over SRE,Runbook: Phase 3: Warm Run (inc-004: Related Bad Rollout)
+    SRE->>UI: Select inc-004 & Click Run (Live Mode)
+    UI->>Agent: Stream investigation
+    Agent->>Memory: query_memory("service=shipping category=bad_deploy")
+    Memory-->>Agent: found=true (recalled inc-003 postmortem)
+    Agent->>Agent: Telemetry investigation primed with prior rollback fix
+    Agent->>UI: Emit diagnosis_completed (memory_used=true)
+
+    Note over SRE,Runbook: Phase 4: Baseline Control
+    SRE->>UI: Run inc-004 with Baseline toggle (memory_skipped)
+    SRE->>UI: Click "Compare last 2" for side-by-side verification
+```
+
+## Key features
+
+- **Autonomous SRE State Machine:** Bounded, acyclic LangGraph DAG executing evidence tools (`get_logs`, `get_metrics`, `get_trace`, `get_pod_status`) with guaranteed termination.
+- **Persistent Hindsight Memory Layer:** Long-term vector memory retaining postmortems and recalling prior incident playbooks.
+- **Self-Consolidating Runbook:** Hindsight Mental Model synthesizing individual incident postmortems into an evolving operational runbook.
+- **Human-in-the-Loop Governance:** Retained memories default to pending status until verified by an engineer.
+- **Side-by-Side Baseline Comparison:** Direct comparison between baseline (memory-off) and warm (memory-on) runs showing actual measured latency, tool calls, and ground-truth pass/fail.
+- **Zero-External-API Embedding Engine:** Local in-process ONNX `multilingual-e5-small` embeddings and reciprocal rank fusion (`rrf`), requiring zero external embedding API keys.
+- **Deterministic Replay Demo Mode:** Pre-recorded SSE streams for reliable demonstration during offline reviews.
+
+## Tech stack
+
+- **Agent Orchestration:** LangGraph (`>=0.2.60`), LangChain Core (`>=0.3.0`)
+- **Backend API:** FastAPI (`>=0.115.0`), Uvicorn (`>=0.30.0`), Pydantic v2, HTTPX, sse-starlette
+- **LLM Provider:** Groq (`langchain-groq`, default: `openai/gpt-oss-120b`), optional Google Gemini (`gemini-3.8-flash`)
+- **Memory Subsystem:** Vectorize Hindsight API v0.10.1 (`hindsight-client`, `hindsight-api-slim`)
+- **Embeddings & Reranker:** In-process ONNX (`intfloat/multilingual-e5-small`, 384 dimensions), Reciprocal Rank Fusion (`rrf`)
 - **Database:** Serverless Neon PostgreSQL with `pgvector` extension (or local embedded `pg0`)
-- **Frontend:** React 18, TypeScript, Vite 5, Tailwind-free Vanilla CSS design system
+- **Frontend SPA:** React 18, TypeScript, Vite 5, Tailwind-free Vanilla CSS
 - **3D Visualization:** Three.js, React Three Fiber (`@react-three/fiber`), `@react-three/drei`, Motion
 
 ## Screenshots
 
-| Command Center & Investigation Queue | Warm Memory & Active Investigation |
+| 3D Command Center & Incident Queue | Active Investigation & Vector Recall |
 |:---:|:---:|
 | ![Command Center](docs/assets/article-dashboard.png) | ![Active Investigation](docs/assets/article-hindsight-recall.png) |
-| *Command Center showing active incident queue, health probes, and 3D epistemic topology.* | *Agent executing bounded evidence tools while recalling past postmortem signatures from Hindsight.* |
+| *Command Center showing active incident queue, health indicators, and 3D topology.* | *LangGraph agent calling telemetry tools while recalling prior postmortems from Hindsight.* |
 
 | Warm Memory Editorial View | Microservice Resolution Runbook & Compare |
 |:---:|:---:|
@@ -196,35 +217,33 @@ flowchart TB
 
 ### 2. Clone and Setup Environment
 
-Run in your terminal from your chosen projects directory:
 ```bash
+# In your terminal
 git clone https://github.com/abhimarkzz/Epistemops.git epistemicops
 cd epistemicops
-```
 
-Create your configuration from the template:
-```bash
-# In the repository root
+# Create configuration file from template
 cp .env.example backend/.env
 ```
 
-Open `backend/.env` and add your Groq key:
+Open `backend/.env` and insert your Groq API key:
 ```ini
 GROQ_API_KEY=gsk_your_groq_api_key_here
 ```
 
 ### 3. Setup Python Backend & Hindsight Native
 
-Run in the repository root:
 ```bash
-# 1. Create and populate backend virtualenv
+# Terminal 1 — In repository root:
+
+# Create backend virtualenv
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cd ..
 
-# 2. Create and populate Hindsight native virtualenv
+# Create Hindsight native virtualenv
 python3 -m venv .venv-hindsight
 .venv-hindsight/bin/pip install --upgrade pip
 .venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]==0.10.1'
@@ -232,8 +251,8 @@ python3 -m venv .venv-hindsight
 
 ### 4. Setup Frontend
 
-Run in the repository root:
 ```bash
+# In repository root
 cd frontend
 npm ci
 cd ..
@@ -241,16 +260,16 @@ cd ..
 
 ### 5. Launch Services
 
-**Terminal 1 — Native Hindsight Memory Engine:**
+**Terminal 1 — Native Hindsight Daemon:**
 ```bash
-# In the repository root
+# In repository root
 bash scripts/hindsight-native.sh
 ```
-*Wait until output displays:* `Starting native Hindsight on http://localhost:8888`
+*Wait until: `Starting native Hindsight on http://localhost:8888`*
 
 **Terminal 2 — FastAPI Backend:**
 ```bash
-# In the repository root
+# In repository root
 cd backend
 source .venv/bin/activate
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
@@ -258,18 +277,16 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 **Terminal 3 — Frontend Dev Server:**
 ```bash
-# In the repository root
+# In repository root
 cd frontend
 npm run dev
 ```
 
 Open your browser to: **`http://localhost:5173`**
 
----
-
 ## Environment Variables
 
-All variables are defined in `backend/.env` (backend only — never exposed to client bundles):
+All variables are defined in `backend/.env` (backend only — never exposed to frontend bundles):
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -290,55 +307,30 @@ All variables are defined in `backend/.env` (backend only — never exposed to c
 | `ALLOW_PUBLIC_RESET` | `true` | Allows wiping demo bank from UI (set `false` on public deployments). |
 | `ADMIN_TOKEN` | *(optional)* | Required Bearer token if `ALLOW_PUBLIC_RESET` is false. |
 
----
-
 ## Demo Walkthrough
 
-Follow this 6-step walkthrough to reproduce the complete learning loop:
-
-1. **Step 1: Cold Run (inc-003):**
-   - Select **inc-003** (`orders` service, `bad_deploy`, P1) in the left Incident Queue.
-   - Select **Live** mode.
-   - Click **Run Investigation**.
-   - Notice in the timeline: `memory_result: found=false`. The agent gathers logs, metrics, trace, and pod status, diagnoses the issue, and outputs a structured postmortem.
-2. **Step 2: Retain Postmortem:**
-   - In the right-hand **Runbook / Memory** panel, observe the new postmortem for `inc-003` under *Recent Retained Postmortems*.
-   - Click **Approve** to mark the postmortem as vetted operational knowledge.
-3. **Step 3: Consolidate Knowledge:**
-   - Click **↻ Refresh Runbook** in the Runbook panel.
-   - Hindsight updates the *Microservice Resolution Runbook*, extracting the bad deployment rollback pattern.
-4. **Step 4: Warm Run (inc-004):**
-   - Select **inc-004** (`shipping` service, `bad_deploy`, P1) — a related deployment failure.
-   - Ensure **Live** mode is selected and click **Run Investigation**.
-   - Notice in the timeline: `memory_result: found=true` with `memory_used: true`. The agent recalls the bad deployment pattern from `inc-003` and cites prior remediation.
-5. **Step 5: Baseline Mode (Control Run):**
-   - Select **inc-004** again.
-   - Select **Baseline** mode (skips Hindsight memory query).
-   - Click **Run (baseline)**.
-   - The agent solves the incident without historical context (`memory_used: false`).
-6. **Step 6: Compare Results:**
-   - In the bottom bar, click **Compare last 2**.
-   - A side-by-side comparison modal displays elapsed execution time, tool invocations, confidence scores, and evaluator ground-truth pass/fail without fabricated claims.
-
----
+1. **Cold Run:** Select `inc-003` (`orders`, `bad_deploy`) in Live mode. Click **Run Investigation**. Memory query returns `found: false`. The agent diagnoses the bad deployment from telemetry and retains a postmortem.
+2. **Retain Postmortem:** In the right panel under *Recent Retained Postmortems*, click **Approve** on `inc-003` to promote the postmortem into trusted memory.
+3. **Consolidation:** Click **↻ Refresh Runbook**. Hindsight synthesizes the postmortem into the Microservice Resolution Runbook.
+4. **Warm Run:** Select `inc-004` (`shipping`, `bad_deploy`) in Live mode. Click **Run Investigation**. Memory query immediately returns `found: true`, injecting the recalled postmortem. Status pill shows `Memory: Used`.
+5. **Baseline Mode (Control):** Select `inc-004` again, switch to **Baseline** mode (skips Hindsight), and run. The agent investigates without memory context (`memory_used: false`).
+6. **Compare Results:** Click **Compare last 2** in the bottom bar to inspect real measured latency, tool counts, and evaluator pass status side by side.
 
 ## Live Demo
 
 A public deployment of EpistemicOps is available for evaluation:
 - **Public URL:** [https://epistemicops.onrender.com](https://epistemicops.onrender.com)
-- *Note:* Free instance spins down after inactivity; initial wake-up may take ~45 seconds.
-
-## Video
-
-A demonstration recording walking through the architecture and live learning loop:
-- **YouTube Link:** [Demonstration Video Guide](docs/VIDEO_SCRIPT.md) *(Production script ready; upload in progress)*
+- *Note:* Free instance spins down after inactivity; initial wake-up takes ~45 seconds.
 
 ## Article
 
 In-depth technical write-up detailing Hindsight integration, architectural choices, and lessons learned:
-- **Article Link:** [Read the Article Draft](docs/ARTICLE_FINAL.md) *(Target platforms: Medium / Dev.to / Hashnode / LinkedIn)*
+- **Article Link:** [docs/ARTICLE_FINAL.md](docs/ARTICLE_FINAL.md) *(Target platforms: Medium / Dev.to / Hashnode / LinkedIn)*
 
----
+## YouTube
+
+Demonstration recording walking through the architecture and live learning loop:
+- **YouTube Link:** [Watch the Video Walkthrough](https://www.youtube.com/watch?v=eACrRBxOAaU) · [Video Script Guide](docs/VIDEO_SCRIPT.md)
 
 ## Project Structure
 
@@ -386,15 +378,11 @@ epistemicops/
 └── docker-compose.yml         # Containerized local Hindsight compose service
 ```
 
----
-
 ## Data & Attribution
 
 - **Incident Telemetry Data:** Incident fixtures (`data/incidents/inc-003`, `inc-004`, `inc-005`) are derived under Apache-2.0 from [`quantranger/sre-agent-eda-bundle`](https://huggingface.co/datasets/quantranger/sre-agent-eda-bundle). Evidence schemas (pod status, log lines, metrics, distributed traces) reflect authentic Kubernetes failure patterns.
 - **Ground Truth Isolation:** Ground truth blocks (`_ground_truth`) were hand-authored by the project maintainers for automated scoring. These blocks are stripped by `FixtureService` before telemetry reaches the agent.
 - **Third-Party Libraries:** Complete open-source licensing notices are cataloged in [docs/ATTRIBUTIONS.md](docs/ATTRIBUTIONS.md).
-
----
 
 ## Safety / Scope
 
@@ -403,20 +391,16 @@ epistemicops/
 - **No Client Key Exposure:** All LLM API keys and database credentials reside exclusively in the backend runtime. Client-side builds contain zero credentials.
 - **Data Privacy & Telemetry:** EpistemicOps sets zero browser tracking cookies, includes zero third-party analytics scripts (no PostHog, Mixpanel, or Google Analytics), and only sends synthetic fixture data to the configured LLM.
 
----
-
 ## Testing
 
 Verified test metrics from current repository test runs:
 
-- **Backend Pytest Suite:** **152 passed** in 1.62s (`pytest backend/tests`).
+- **Backend Pytest Suite:** **152 passed** in 1.92s (`pytest backend/tests`).
   - Unit tests cover LangGraph state transitions, provider selection, evidence sanitization, memory service isolation, and deterministic keyword evaluation.
   - Zero external network calls required during testing (all LLM and Hindsight calls are mocked).
-- **Frontend Vitest Suite:** **9 passed** in 2.71s (`npm test --prefix frontend`).
+- **Frontend Vitest Suite:** **9 passed** in 2.77s (`npm test --prefix frontend`).
   - Covers 3D topology state synchronization, incident selection, demo mode safety guards, and modal accessibility.
 - **TypeScript & Production Build:** Clean build with zero type errors (`tsc && vite build`).
-
----
 
 ## Known Limitations
 
@@ -424,8 +408,6 @@ Verified test metrics from current repository test runs:
 2. **Evaluator Heuristics:** The verification evaluator uses deterministic substring and keyword matching against ground-truth items. It is not an opaque semantic AI judge.
 3. **Consolidation Rate Limits:** On free-tier LLM endpoints (such as Groq free tier), heavy background consolidation of multiple memories can occasionally encounter tokens-per-minute pauses. Vector recall operates independently of these limits and remains instantaneous.
 4. **Single-Run Variance:** Single cold/warm execution time comparisons are subject to network jitter and LLM generation variance. True distribution shifts should be measured across repeated batches.
-
----
 
 ## Documentation
 
@@ -436,14 +418,12 @@ Verified test metrics from current repository test runs:
 - [Third-Party Attributions](docs/ATTRIBUTIONS.md) — Comprehensive license and source attributions.
 - [Submission Package & Checklists](docs/SUBMISSION_CHECKLIST.md) — Verification matrix and deliverable status.
 
----
-
 ## License
 
-This project is licensed under the **Apache-2.0 License**. See the `LICENSE` file for details.
+This project is licensed under the **Apache-2.0 License**. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
 - Built with [Vectorize Hindsight](https://github.com/vectorize-io/hindsight) for long-term AI agent memory.
-- Powered by [LangGraph](https://github.com/langchain-ai/langgraph) for bounded cyclical and acyclic state orchestration.
+- Powered by [LangGraph](https://github.com/langchain-ai/langgraph) for bounded state orchestration.
 - Telemetry patterns adapted from [`quantranger/sre-agent-eda-bundle`](https://huggingface.co/datasets/quantranger/sre-agent-eda-bundle).
