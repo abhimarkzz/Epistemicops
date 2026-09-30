@@ -10,7 +10,7 @@ An autonomous Site Reliability Engineering (SRE) incident-response agent that in
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/Tests-152%20passed-success.svg)](backend/tests/)
 
-**[Live Demo](https://epistemicops.onrender.com)** · **[Article](docs/ARTICLE_FINAL.md)** · **[YouTube](https://www.youtube.com/watch?v=eACrRBxOAaU)** · **[Architecture](docs/architecture.md)** · **[Hindsight](docs/HINDSIGHT_EXPLANATION.md)** · **[Documentation](docs/)**
+**[Live Demo](https://epistemicops.onrender.com)** · **[Article](https://dev.to/abhimarkz/giving-an-sre-incident-response-agent-a-real-memory-with-hindsight-45id)** · **[YouTube](https://www.youtube.com/watch?v=eACrRBxOAaU)** · **[Architecture](docs/architecture.md)** · **[Hindsight](docs/HINDSIGHT_EXPLANATION.md)** · **[Documentation](docs/)**
 
 ---
 
