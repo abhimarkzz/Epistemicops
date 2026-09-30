@@ -4,7 +4,7 @@ Flow: load_incident → query_memory → investigate → analyze → validate
       → produce_result → retain_postmortem → END
 
 Any node that sets state["error"] is immediately routed to error_end → END.
-The LLM is injected so tests can substitute a mock without calling Gemini.
+The LLM is injected so tests can substitute a mock without calling live LLM APIs.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ from typing import Any, AsyncGenerator
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 
@@ -40,20 +39,27 @@ HIDDEN_GT_FIELDS = {
 def _make_default_llm() -> BaseChatModel:
     """Build the diagnosis LLM for the configured provider.
 
-    Groq (free tier) is used when selected/configured; Gemini is the default.
+    Groq (free tier) is the primary provider.
     Both are swapped for a mock in tests, so neither key is needed to run the suite.
     """
-    if settings.active_provider() == "groq":
-        from langchain_groq import ChatGroq
+    if settings.active_provider() == "gemini":
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
 
-        return ChatGroq(
-            model=settings.groq_model,
-            api_key=settings.groq_api_key,
-            temperature=0,
-        )
-    return ChatGoogleGenerativeAI(
-        model=settings.gemini_model,
-        google_api_key=settings.gemini_api_key,
+            return ChatGoogleGenerativeAI(
+                model=settings.gemini_model,
+                google_api_key=settings.gemini_api_key,
+                temperature=0,
+            )
+        except ImportError as exc:
+            raise RuntimeError(
+                "langchain-google-genai is not installed. Use Groq provider instead."
+            ) from exc
+    from langchain_groq import ChatGroq
+
+    return ChatGroq(
+        model=settings.groq_model,
+        api_key=settings.groq_api_key,
         temperature=0,
     )
 
@@ -137,6 +143,7 @@ def _node_load_incident(fixture_svc: FixtureService):
 def _node_query_memory():
     async def node(state: AgentState) -> dict:
         if state.get("skip_memory", False):
+            # Baseline intentionally skips Hindsight retrieval so it can serve as the memory-off experimental control.
             return {
                 "memory_context": None,
                 "events": [AgentEvent(event="memory_skipped", data={"reason": "baseline mode"})],

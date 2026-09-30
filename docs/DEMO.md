@@ -1,184 +1,149 @@
-# EpistemicOps — Demo Walkthrough
+# EpistemicOps Demonstration Walkthrough
 
-> This document is the official demo guide for judges and evaluators.
-> It walks through the complete cold → retain → consolidate → warm → baseline → compare learning loop.
-
----
-
-## Prerequisites
-
-Before starting the demo, ensure all three services are running:
-
-1. **Hindsight** (from project root): `docker compose up -d`
-2. **Backend** (from `backend/`): `source .venv/bin/activate && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`
-3. **Frontend** (from `frontend/`): `npm run dev`
-4. **Open** http://localhost:5173 in a browser
-
-Verify the backend is healthy: `curl http://localhost:8000/health` should report `"status": "ok"`.
+This guide provides a structured, judge-friendly walkthrough of the EpistemicOps learning loop: running an investigation without memory (cold), retaining the postmortem in Vectorize Hindsight, consolidating operational knowledge, recalling past patterns during a related outage (warm), and executing a memory-off control (baseline) for side-by-side verification.
 
 ---
 
-## Phase 1 — Problem
+## Before You Start
 
-**What to notice:** The incident queue in the sidebar lists 5 synthetic infrastructure incidents (database pool exhaustion, memory leak, bad deployment, stuck rollout, cache stampede). Each represents a real SRE failure pattern. The agent has no prior knowledge of any of these incidents.
-
-**Key point for judges:** This is the starting state — a stateless agent with zero operational memory.
-
----
-
-## Phase 2 — Cold Investigation (Baseline)
-
-**What I click:**
-1. Select **inc-003** ("Bad Deploy — Orders API") from the incident queue
-2. Click the **Baseline** mode toggle
-3. Click **Run (baseline)**
-
-**What the agent does:**
-- Skips memory query (emits `memory_skipped: baseline mode`)
-- Calls 4 evidence tools: `get_logs`, `get_metrics`, `get_trace`, `get_pod_status`
-- Sends all evidence to the LLM for analysis
-- Produces a root-cause diagnosis and remediation recommendation
-
-**What the judge should notice:**
-- The timeline shows `memory_skipped` — the agent has no prior context
-- All 4 tools are called (the agent gathers evidence from scratch)
-- A diagnosis appears with a confidence score
-- The elapsed time and tool call count are recorded in the Recent Runs bar
-
-**Expected screen evidence:**
-- Timeline events: `memory_skipped → tool_started (×4) → diagnosis_completed`
-- Recent Runs bar shows one completed run with mode "baseline"
+Ensure the EpistemicOps stack is running:
+1. **Hindsight Memory Engine:** Running locally on port 8888 (`bash scripts/hindsight-native.sh` or Docker) or verified via the live deployment at [https://epistemicops.onrender.com](https://epistemicops.onrender.com).
+2. **FastAPI Backend:** Running on port 8000 with a valid `GROQ_API_KEY` (or Gemini key) in `backend/.env`.
+3. **Frontend Application:** Open in browser at `http://localhost:5173` (or the live URL).
+4. **Header Health Indicators:** Confirm both **Groq** and **Hindsight** status pills in the top right display green (`ok`).
 
 ---
 
-## Phase 3 — Retain
+## 1. Cold Incident
 
-**What I click:**
-1. After the cold run completes, the agent automatically retains a postmortem in Hindsight
-2. The timeline shows `memory_retention_started` and `postmortem_created`
+### ACTION
+1. In the left **Incident Queue**, locate and click **`inc-003`** (`orders` service, `bad_deploy` category, P1 severity).
+2. Ensure the mode selector at the top of the queue is set to **Live**.
+3. Click the primary button: **Run Investigation**.
 
-**What the agent does:**
-- Builds a structured postmortem (service, root cause, evidence, remediation)
-- Calls `client.aretain()` to store it in the `epistemic-sre` Hindsight bank
-- Saves a `PostmortemRecord` with `approval_status: pending`
+### EXPECTED RESULT
+- The central **Agent Activity** timeline begins streaming real-time events via Server-Sent Events (SSE).
+- The timeline shows:
+  - `incident_started` (orders, bad_deploy, P1).
+  - `memory_query_started` → `memory_result`: `found: false` (*"No prior patterns found"*).
+  - Sequential read-only tool calls: `get_logs`, `get_metrics`, `get_trace`, `get_pod_status`.
+  - `diagnosis_started` → `diagnosis_completed`.
+  - The diagnosis card displays the detected root cause (misconfigured deployment causing 5xx errors), evidence citations, and rollback remediation.
+  - The final status badge displays `memory_used: false`.
 
-**What the judge should notice:**
-- The postmortem appears in the Runbook/Approval panel with "Pending" status
-- Hindsight is now processing the postmortem in the background
-
----
-
-## Phase 4 — Consolidation
-
-**What I click:**
-1. In the Runbook panel, click **Approve** on the pending postmortem
-2. Optionally trigger a manual refresh: `curl -X POST http://localhost:8000/api/memory/runbook/refresh`
-3. Wait 1–3 minutes for Hindsight to consolidate
-
-**What the agent does (Hindsight internally):**
-- Extracts facts from the approved postmortem
-- Synthesizes them into the "Microservice Resolution Runbook" mental model
-- The runbook now contains patterns from the resolved incident
-
-**What the judge should notice:**
-- The Runbook panel status changes from "stale" or "generating" to "current"
-- The runbook content (visible in the panel) includes synthesized patterns about deployment failures
+### WHY IT MATTERS
+This establishes the unassisted baseline behavior of an SRE agent encountering an unfamiliar failure mode for the first time. The agent investigates strictly from first principles using telemetry.
 
 ---
 
-## Phase 5 — Warm Investigation (Memory-Enabled)
+## 2. Retain
 
-**What I click:**
-1. Select **inc-004** ("Stuck Rollout — Shipping Service") — a similar deployment-category incident
-2. Ensure **Live** mode is selected (not Baseline)
-3. Click **Run Investigation**
+### ACTION
+1. Observe the right-hand **Runbook / Memory** panel immediately after the diagnosis finishes.
+2. Under **Recent Retained Postmortems**, locate the newly created entry for `inc-003`.
+3. Click the **Approve** button on the `inc-003` postmortem card.
 
-**What the agent does:**
-- Queries Hindsight memory: builds a semantic query from `service=shipping-service category=stuck_rollout alert: ...`
-- Receives recalled patterns from the inc-003 postmortem
-- Calls all 4 evidence tools (evidence gathering is not skipped)
-- Sends evidence + prior patterns to the LLM
-- Produces a diagnosis informed by prior knowledge
+### EXPECTED RESULT
+- The timeline displays `memory_retention_started` followed by `postmortem_created: success=true`.
+- In the right-hand panel, the approval status for `inc-003` updates from `pending` to `approved`.
+- The total memory counter increments in the Memory Bank summary header.
 
-**What the judge should notice:**
-- The timeline shows `memory_query_started` → `memory_result: found: true`
-- The memory result summary shows prior incident patterns
-- The diagnosis may reference prior knowledge
-- `diagnosis_completed` shows `memory_used: true`
-
-**Expected screen evidence:**
-- `memory_result` event with `found: true` and a summary of prior patterns
-- The diagnosis acknowledges prior experience
+### WHY IT MATTERS
+Operational memory requires human governance. EpistemicOps persists structured postmortems (omitting noisy raw logs) to Hindsight, and allows engineers to review and vet knowledge before assigning higher trust to it.
 
 ---
 
-## Phase 6 — Baseline (for Comparison)
+## 3. Consolidation
 
-**What I click:**
-1. Keep **inc-004** selected
-2. Switch to **Baseline** mode
-3. Click **Run (baseline)**
+### ACTION
+1. In the **Runbook / Memory** panel, navigate to the **Microservice Resolution Runbook** section.
+2. Click the **↻ Refresh Runbook** button.
 
-**What the agent does:**
-- Skips memory query entirely
-- Investigates inc-004 from scratch, without any prior knowledge
+### EXPECTED RESULT
+- The backend triggers `POST /api/memory/runbook/refresh` against Hindsight's mental model API.
+- The runbook status badge shifts to `current` (or `consolidation_pending` if the background engine is queueing delta synthesis).
+- The evolving runbook markdown reflects the newly synthesized bad deployment recovery playbook.
 
-**What the judge should notice:**
-- `memory_skipped: baseline mode` appears in the timeline
-- The diagnosis is produced without memory context
-- This provides the comparison point
+### WHY IT MATTERS
+Hindsight is not merely a static vector archive. Its Mental Model observation engine consolidates discrete postmortems into higher-level, evolving operational runbooks across microservices.
 
 ---
 
-## Phase 7 — Compare
+## 4. Warm Incident
 
-**What I click:**
-1. Click **Compare last 2** in the Recent Runs bar
+### ACTION
+1. In the **Incident Queue**, select **`inc-004`** (`shipping` service, `bad_deploy` category, P1 severity).
+2. Keep the mode set to **Live**.
+3. Click **Run Investigation**.
 
-**What the agent does:**
-- The backend compares the two most recent runs side-by-side
+### EXPECTED RESULT
+- The timeline streams events:
+  - `memory_query_started` with query `service=shipping category=bad_deploy alert: ...`
+  - `memory_result` immediately displays **`found: true`**, showing the recalled postmortem from `inc-003`!
+  - The timeline highlights an active memory recall banner.
+  - The agent proceeds with evidence collection, but the LLM diagnostic prompt now includes the recalled postmortem context.
+  - When diagnosis completes, the summary chip explicitly displays **`Memory: Used`** (`memory_used: true`).
 
-**What the judge should notice:**
-- A comparison table shows:
-  - **Elapsed time** for both runs
-  - **Tool calls** (same count — memory does not skip evidence gathering)
-  - **Confidence** scores
-  - **Evaluator pass/fail** and evidence score
-  - **Memory used**: true vs false
-- The disclaimer: *"These are measured values. Differences reflect actual run conditions, not claimed improvements."*
-
----
-
-## Phase 8 — Takeaway
-
-**Key points to highlight:**
-
-1. **Memory is central, not incidental.** The entire investigation flow is built around retain → consolidate → recall.
-2. **Graceful degradation.** When memory is empty (cold) or disabled (baseline), the agent still works — it just starts from zero.
-3. **Human-in-the-loop.** Postmortems require human approval before influencing the runbook.
-4. **Honest comparison.** The comparison shows measured values, not claimed improvements.
-5. **Read-only safety.** The agent never executes remediation or mutates infrastructure.
+### WHY IT MATTERS
+This is the core value of persistent memory. Instead of re-learning how to diagnose a bad deployment from scratch, the agent is primed by Hindsight with the proven failure signature and remediation strategy learned in `inc-003`.
 
 ---
 
-## Demo Mode (Offline)
+## 5. Baseline
 
-If Hindsight or the LLM is unavailable:
+### ACTION
+1. Select **`inc-004`** again in the Incident Queue.
+2. Switch the mode toggle from Live to **Baseline**.
+3. Click **Run (baseline)**.
 
-1. Select **inc-003** or **inc-004**
-2. Click **Demo** mode
-3. Click **Run (demo)**
-4. Pre-recorded events stream from `data/demo_events/`. An orange "DEMO" badge appears.
-5. The first event identifies itself: `"Demo Mode — deterministic replay"`
+### EXPECTED RESULT
+- The timeline shows:
+  - `run_started` with `mode: baseline`.
+  - `memory_skipped` with reason `"baseline mode"`.
+  - Zero calls are made to Hindsight.
+  - The agent completes the investigation from raw telemetry alone.
+  - The run chip registers with `memory_used: false`.
 
-Demo mode does not call Hindsight or any LLM. It replays recorded events for UI demonstration purposes.
+### WHY IT MATTERS
+Baseline mode acts as the experimental control. It eliminates the variable of incident complexity by allowing judges to run the exact same incident with memory intentionally turned off.
 
 ---
 
-## Memory Reset (if needed)
+## 6. Compare
 
-To start fresh:
-1. In the Runbook panel, click **⚠ Reset Memory Bank**
-2. Confirm the reset
-3. Only the `epistemic-sre` bank is affected. Other Hindsight banks are untouched.
-4. The approval store (`data/memory_state.json`) is also cleared.
+### ACTION
+1. Look at the bottom **Recent Runs** bar, which displays run chips for the completed investigations.
+2. Click the **Compare last 2** button (or select any two run chips to compare).
+
+### EXPECTED RESULT
+- A side-by-side comparison modal opens displaying:
+  - **Run Mode:** `baseline` vs `live` (warm).
+  - **Memory Recalled:** `No` vs `Yes`.
+  - **Elapsed Time:** Measured wall-clock latency in milliseconds.
+  - **Tool Invocations:** Tool counts across both runs.
+  - **Diagnostic Confidence:** Agent certainty score.
+  - **Evaluator Overlap:** Ground-truth evidence keyword coverage and category match pass/fail.
+- A prominent disclaimer states: *"These are measured values. Differences reflect actual run conditions, not claimed improvements."*
+
+### WHY IT MATTERS
+We present real, measured engineering results rather than synthetic marketing benchmarks. Judges can directly inspect the operational impact of memory under identical test conditions.
+
+---
+
+## 7. What to Look For
+
+- **Vector Recall without LLM Lag:** Notice how quickly `memory_result` returns (`< 100ms`). Hindsight vector recall does not require an LLM invocation, so memory works even when cloud LLMs are slow.
+- **Strict Telemetry Sanitization:** The agent never mentions hidden fields or ground truth; it only cites facts discovered via `get_logs`, `get_metrics`, `get_trace`, and `get_pod_status`.
+- **Deterministic Replay Guard:** When switching to **Demo Mode**, the timeline displays an orange `DEMO` badge with an explicit disclaimer indicating that events are pre-recorded for offline demonstration.
+
+---
+
+## Troubleshooting
+
+| Issue | Cause | Resolution |
+|---|---|---|
+| **Timeline does not update after clicking Run** | Backend not reachable or SSE stream blocked | Verify backend is running (`curl http://127.0.0.1:8000/health`). Check browser console for network connection errors. |
+| **Header shows LLM `unreachable`** | `GROQ_API_KEY` missing in `backend/.env` | Add a valid key from [console.groq.com](https://console.groq.com) and restart uvicorn. |
+| **Header shows Hindsight `unreachable`** | Native daemon or Docker container stopped | Run `bash scripts/hindsight-native.sh` or check `docker compose ps`. |
+| **Warm run reports `found: false`** | `inc-003` was not retained or bank was reset | Run `inc-003` first in Live mode, ensure `postmortem_created: success` is logged, then run `inc-004`. |
+| **Runbook status stays `generating`** | Free-tier LLM rate limits during consolidation | Vector recall functions regardless of runbook state. Click **↻ Refresh Runbook** to trigger an update. |

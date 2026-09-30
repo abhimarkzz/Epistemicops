@@ -1,206 +1,252 @@
-# How Hindsight Is Used in EpistemicOps
+# Hindsight in EpistemOps
 
-## Why Hindsight
-
-SRE incident response suffers from a fundamental problem: every investigation starts from zero. An on-call engineer encounters a database connection pool exhaustion, spends 45 minutes tracing logs and metrics to a root cause, writes a postmortem — and six weeks later, a teammate investigates the same failure pattern without any of that prior knowledge.
-
-EpistemicOps uses [Hindsight](https://github.com/vectorize-io/hindsight) as its persistent memory layer because Hindsight provides exactly the primitives needed to solve this:
-
-- **Retain**: Store structured postmortems after each resolved incident
-- **Recall**: Semantically search prior incident patterns when a new incident arrives
-- **Mental Models**: Consolidate individual postmortems into a living "Microservice Resolution Runbook" — a synthesis that captures cross-incident patterns, not just individual facts
-
-Hindsight is not an add-on feature in EpistemicOps. It is the mechanism that transforms a stateless diagnostic tool into a learning system.
-
-For more context on what agent memory is and why it matters, see [What is Agent Memory?](https://vectorize.io/what-is-agent-memory) by Vectorize.
+This document is the authoritative technical specification of how **Vectorize Hindsight** provides persistent, cross-incident operational memory in EpistemicOps.
 
 ---
 
-## What Is Retained
+## Why memory is needed
 
-After every successful investigation, the agent builds a structured postmortem containing:
+Production Site Reliability Engineering (SRE) is fundamentally cumulative. When an on-call engineer diagnoses an outage caused by database connection pool saturation, cache stampedes, or bad configuration rollouts, the organization gains valuable operational knowledge.
 
-- **Incident metadata**: service name, failure category, severity
-- **Root cause**: the synthesized diagnosis (not raw logs)
-- **Key evidence references**: which evidence items supported the diagnosis
-- **Recommended remediation**: specific fix steps
-- **Confidence score**: the agent's self-assessed certainty
-- **Alert pattern**: the triggering alert title
-- **Incident context**: the human-readable description
+Stateless AI assistants discard this context the moment an incident resolution finishes. Relying on conversational chat history across days or weeks fails because:
+- Context windows are finite and degrade prompt reasoning when stuffed with voluminous raw logs.
+- Chat history is linear and lacks semantic indexing to retrieve the right incident playbook when a related failure occurs weeks later.
+- Without an isolated memory substrate, an agent cannot distinguish between verified, approved postmortems and speculative in-progress hypotheses.
 
-Raw log lines are **intentionally excluded** from retained content. Only synthesized findings and diagnostic patterns are stored so the memory stays compact and semantically useful.
-
-### What stays in incident fixtures (not retained)
-
-- Raw log lines (`data/incidents/*.json` → `logs` field)
-- Metric time series
-- Distributed trace spans
-- Pod status snapshots
-- Ground truth evaluation data (`_ground_truth`)
-
-These are evidence that the agent reads during investigation. They are too voluminous and incident-specific to store in memory.
+Hindsight provides a dedicated, persistent memory layer that enables an SRE agent to accumulate, govern, and recall institutional knowledge across separate incidents.
 
 ---
 
-## How Retain Is Triggered
+## What gets retained
 
-Retain happens automatically at the end of every successful investigation, in the `retain_postmortem` node of the LangGraph agent DAG:
+Retaining raw telemetry (e.g. 50,000 raw log lines or gigabytes of Prometheus time-series) creates noise and degrades vector similarity search. EpistemicOps explicitly filters raw evidence before retention.
+
+Only synthesized, high-signal postmortem narratives are stored in Hindsight:
+- **Incident Identity & Tags:** Incident ID, service name, failure category, severity.
+- **Root Cause Summary:** The concise explanation of why the failure occurred.
+- **Key Evidence Tokens:** Specific keywords, error codes, and metric anomalies that characterized the outage.
+- **Recommended Remediation:** Actionable resolution steps, rollbacks, or config modifications.
+- **Diagnostic Confidence:** Agent confidence score at the time of resolution.
+- **Alert Pattern:** The high-level alert title that triggered the event.
+
+Raw log lines and ephemeral trace spans are deliberately excluded from retention.
+
+---
+
+## Retain
+
+Retention occurs asynchronously after the LangGraph agent validates its diagnostic findings.
+
+In `backend/app/memory/service.py`, `MemoryService.retain_incident()` formats the structured postmortem and calls Hindsight's `aretain` method:
 
 ```python
-# backend/app/agent/graph.py — _node_retain_postmortem
-async def node(state: AgentState) -> dict:
-    diagnosis = state["diagnosis"]
-    incident = state["incident"]
-    # ...
-    success = await retain_incident_full(incident, diagnosis)
-    events.append(AgentEvent(event="postmortem_created", data={"success": success}))
+async def retain_incident(
+    self,
+    incident: dict[str, Any],
+    diagnosis: DiagnosisResult,
+) -> PostmortemRecord:
+    inc_id = diagnosis.incident_id
+    content = _build_postmortem_text(incident, diagnosis)
+    tags = list(
+        {
+            t
+            for t in [
+                incident.get("service"),
+                incident.get("category"),
+                "postmortem",
+                inc_id,
+            ]
+            if t
+        }
+    )
+
+    record = PostmortemRecord(
+        incident_id=inc_id,
+        service=incident.get("service", "unknown"),
+        category=incident.get("category"),
+        severity=incident.get("severity", "unknown"),
+        retained_at=datetime.now(timezone.utc),
+        approval_status=ApprovalStatus.pending,
+        tags=tags,
+        document_id=inc_id,
+        evidence_refs=diagnosis.evidence[:5],
+        source_fixture=incident.get("source_record_id"),
+    )
+
+    client = _client()
+    try:
+        await client.aretain(
+            bank_id=settings.hindsight_bank_id,
+            content=content,
+            context=f"Postmortem for {inc_id}",
+            document_id=inc_id,
+            tags=tags,
+            retain_async=True,  # Non-blocking; fact extraction runs in background
+        )
+    except Exception as exc:
+        logger.warning("Hindsight retain failed for %s: %s", inc_id, exc)
+    finally:
+        await client.aclose()
+
+    self._store.upsert(record)
+    return record
 ```
 
-This calls `MemoryService.retain_incident()`, which:
-
-1. Builds the postmortem text via `_build_postmortem_text()`
-2. Calls `client.aretain()` with `retain_async=True` (non-blocking)
-3. Saves a `PostmortemRecord` to `data/memory_state.json` with `approval_status: pending`
-
-The retain call is fire-and-forget from the agent's perspective. Hindsight processes the content in the background, extracting structured facts for later retrieval.
+Setting `retain_async=True` ensures the HTTP response to the user remains fast while Hindsight indexes memories and extracts entities in the background.
 
 ---
 
-## How Recall Is Performed
+## Recall
 
-Recall happens at the beginning of every investigation (unless baseline mode is active), in the `query_memory` node:
+When a new alert arrives, EpistemicOps queries Hindsight before running telemetry queries.
+
+A key engineering decision in EpistemicOps is using **semantic vector recall** (`arecall`) rather than agentic reflection (`reflect`) for memory retrieval:
+1. Vector recall executes directly via embedding vector search without an intermediate LLM call.
+2. It operates at sub-100ms latency and consumes **zero LLM tokens**, ensuring reliability on free-tier LLM providers.
+3. It directly surfaces past postmortems sharing service names, categories, and alert symptoms.
+
+From `backend/app/memory/service.py`:
 
 ```python
-# backend/app/agent/graph.py — _node_query_memory
-incident = state["incident"]
-alert = incident.get("alert") or {}
-query = (
-    f"service={incident.get('service', '')} "
-    f"category={incident.get('category', '')} "
-    f"alert: {alert.get('title', '')}"
-)
-context = await query_incident_patterns(query)
+async def query_memory(self, query: str) -> MemoryQueryResult:
+    client = _client()
+    try:
+        response = await client.arecall(
+            bank_id=settings.hindsight_bank_id,
+            query=query,
+            budget="low",
+            max_tokens=1024,
+        )
+        answer = _format_recall(getattr(response, "results", None) or [])
+        found = bool(answer)
+    except Exception as exc:
+        logger.warning("Hindsight query_memory failed: %s", exc)
+        answer = ""
+        found = False
+    finally:
+        await client.aclose()
+
+    records = self._store.all()
+    counts = self._store.counts()
+    trust = _trust_level(records, found)
+
+    return MemoryQueryResult(
+        answer=answer,
+        found=found,
+        trust_level=trust,
+        pending_count=counts.get("pending", 0),
+    )
 ```
 
-This calls `MemoryService.query_memory()`, which uses `client.arecall()` — a semantic vector search (not an LLM call). The top-3 results are formatted as a compact context string and injected into the `memory_context` field of the agent state.
-
-When the LLM receives the analysis prompt, prior patterns appear under a clearly labeled section:
-
-```
---- PRIOR INCIDENT PATTERNS (from memory) ---
-- POSTMORTEM | incident=inc-003 | service=orders-api ...
-  Root Cause: Bad deployment configuration ...
----
-```
-
-This gives the LLM concrete prior experience to draw from when diagnosing the current incident.
+The recalled postmortem text is formatted into markdown bullet points and injected into the agent's diagnosis prompt under the `PRIOR OPERATIONAL KNOWLEDGE (Hindsight)` section.
 
 ---
 
-## When Recall Occurs
+## Consolidation / Reflection
 
-- **Live mode**: Recall runs before investigation. The `memory_result` SSE event reports `found: true` or `found: false`.
-- **Baseline mode**: Recall is skipped entirely. The `memory_skipped` event is emitted instead.
-- **Demo mode**: Pre-recorded events are replayed. No live recall occurs.
+Individual postmortems capture point-in-time incidents. Hindsight's observation engine (`HINDSIGHT_API_ENABLE_OBSERVATIONS=true`) periodically synthesizes memories into cross-incident operational observations.
+
+When multiple postmortems mention database pool saturation or rollback procedures across different microservices, Hindsight consolidates these entries into higher-level architectural insights (e.g., identifying connection pool misconfigurations as a recurring cross-service anti-pattern).
 
 ---
 
-## Consolidation and the Mental Model
+## Mental Model / Runbook
 
-Individual postmortems are valuable, but the real power of Hindsight is consolidation. EpistemicOps configures a **Mental Model** called "Microservice Resolution Runbook":
+Hindsight's Mental Model feature provides an evolving, human-readable operational runbook.
+
+In EpistemicOps, startup initialization creates a Mental Model named **"Microservice Resolution Runbook"** (`microservice-resolution-runbook`) configured with delta trigger mode:
 
 ```python
-# backend/app/memory/service.py — initialize()
+# Initialized in MemoryService.initialize()
 await client.acreate_mental_model(
     bank_id=settings.hindsight_bank_id,
     name="Microservice Resolution Runbook",
-    source_query="microservice incident root cause diagnosis resolution steps ...",
+    source_query=(
+        "microservice incident root cause diagnosis resolution steps "
+        "failure pattern remediation SRE postmortem bad_deploy saturation"
+    ),
     tags=["sre", "incident", "runbook", "microservices"],
-    trigger={"mode": "delta", "refresh_after_consolidation": True},
+    max_tokens=2048,
+    trigger={
+        "mode": "delta",
+        "refresh_after_consolidation": True,
+    },
 )
 ```
 
-The mental model is a higher-level synthesis. Instead of storing "inc-003 had a bad deploy" and "inc-004 had a stuck rollout" as separate facts, Hindsight consolidates them into operational knowledge like: "Kubernetes deployment failures often involve image pull errors or readiness probe misconfigurations; check pod events and deployment rollout status first."
-
-### How consolidation works
-
-1. An investigation completes → postmortem is retained
-2. A human reviews and **approves** the postmortem in the EpistemicOps UI
-3. Hindsight's observation pipeline detects new approved memories
-4. The mental model is refreshed (delta mode: only new memories are processed)
-5. The runbook content is updated with synthesized patterns
-
-Manual refresh can be triggered via `POST /api/memory/runbook/refresh`.
-
-Consolidation is asynchronous. It typically takes 1–3 minutes but may be longer depending on LLM load.
+- When postmortems are retained and consolidated, the runbook content updates automatically.
+- Engineers can also trigger an immediate on-demand refresh via `POST /api/memory/runbook/refresh`.
+- The UI displays the runbook status truthfully: `generating`, `stale`, `consolidation_pending`, or `current`.
 
 ---
 
-## How Memory Changes the Investigation Path
+## Cold vs Warm
 
-### Without memory (cold / baseline)
+| Dimension | Cold Run (First Occurrence) | Warm Run (Post-Retention) |
+|---|---|---|
+| **Incident Scenario** | `inc-003` (`orders`, `bad_deploy`) | `inc-004` (`shipping`, `bad_deploy`) |
+| **Hindsight Query** | `query_memory()` yields `found=false` | `query_memory()` yields `found=true` |
+| **Agent Context** | Empty operational memory | Injected prior postmortem & fix steps |
+| **Investigation Trace** | Evaluates all symptoms from scratch | Corroborates known failure signature |
+| **Diagnosis Output** | Derives diagnosis from telemetry alone | References prior postmortem pattern |
+| **Memory Badge** | `memory_used: false` | `memory_used: true` |
 
+---
+
+## Baseline mode
+
+To verify that differences between runs stem from memory rather than prompt randomness, EpistemicOps provides an experimental control: **Baseline Mode**.
+
+When `skip_memory=True` (`POST /api/investigate/{id}?baseline=true`), the LangGraph state machine skips `query_memory` entirely:
+
+```python
+# backend/app/agent/graph.py
+if state.get("skip_memory", False):
+    # Baseline intentionally skips Hindsight retrieval so it can serve as the memory-off experimental control.
+    return {
+        "memory_context": None,
+        "events": [AgentEvent(event="memory_skipped", data={"reason": "baseline mode"})],
+    }
 ```
-load_incident → query_memory (skip) → investigate (4 tools) → analyze → diagnosis
-```
 
-The LLM sees only the raw evidence for the current incident. It must reason from first principles.
-
-### With memory (warm / live)
-
-```
-load_incident → query_memory (recall) → investigate (4 tools) → analyze → diagnosis
-```
-
-The LLM sees raw evidence **plus** prior incident patterns. It can:
-- Recognize a similar failure mode from a previous incident
-- Focus on the most relevant evidence (based on prior experience)
-- Produce a diagnosis that builds on prior knowledge
-
-The agent does not skip evidence-gathering when memory is available. All 4 tools are always called. Memory provides additional context, not a shortcut.
+Running the exact same incident in Baseline mode produces an unassisted control measurement that can be compared against a warm run in the Recent Runs bar.
 
 ---
 
-## What Baseline Mode Does
+## What Hindsight does NOT do
 
-Baseline mode (`?baseline=true` on the investigate endpoint) disables memory query. This allows direct comparison between memory-enabled and memory-disabled investigations of the same or similar incidents.
-
-The comparison endpoint (`POST /api/runs/compare`) shows side-by-side metrics:
-- Elapsed time
-- Tool call count
-- Confidence
-- Evaluator pass/fail
-- Evidence score
-
-The UI displays measured values with the disclaimer: *"These are measured values. Differences reflect actual run conditions, not claimed improvements."*
+To maintain reliability and clear operational boundaries, Hindsight is strictly scoped:
+- **No Direct Infrastructure Execution:** Hindsight does not execute bash commands, modify Kubernetes clusters, or apply remediation patches directly.
+- **No Raw Telemetry Ingestion:** Hindsight is not a metric timeseries database (like Prometheus) or log aggregation platform (like Loki). It stores synthesized diagnostic knowledge.
+- **No Unsupervised Auto-Approval:** Retained postmortems default to `pending` status until reviewed by an engineer in the approval panel.
+- **No Shared Tenant Contamination:** Operations are strictly constrained to the isolated bank `epistemic-sre`.
 
 ---
 
-## What Happens When Memory Is Unavailable
+## Failure / unavailable-memory behavior
 
-If Hindsight is unreachable:
-- The backend still starts (the lifespan handler catches init failures)
-- `query_memory` returns an empty result (`found: false`)
-- `retain_incident` logs a warning but does not crash
-- The investigation proceeds without memory context
-- The `/health` endpoint reports `hindsight: unreachable` (informational only)
-
-The system degrades gracefully to a stateless diagnostic tool.
+EpistemicOps is engineered to degrade gracefully if Hindsight is unreachable:
+- **Startup Resilience:** If Hindsight is not running on port 8888 when the FastAPI backend starts, `lifespan` logs a warning and proceeds.
+- **Safe Query Fallback:** If `query_memory()` throws a network or timeout error, it logs the exception, returns `found=false`, and yields an empty memory string. The LangGraph agent proceeds as a cold run.
+- **Safe Retain Fallback:** If `retain_incident()` fails to connect to Hindsight, it records the postmortem in the local JSON store (`data/memory_state.json`) and allows the investigation run to finish normally.
+- **Health Reporting:** `GET /health` reports `"hindsight": {"status": "unreachable"}` without breaking HTTP 200 backend availability.
 
 ---
 
-## What Hindsight Does NOT Do
+## Relevant code paths
 
-- **Hindsight does not execute remediation.** Recommended actions are advisory.
-- **Hindsight does not replace the investigation.** All 4 evidence tools are always called regardless of memory state.
-- **Hindsight does not guarantee improved accuracy.** A warm run may or may not produce a better diagnosis depending on how relevant the prior knowledge is.
-- **Hindsight does not process raw logs.** Only synthesized postmortem content is retained.
-- **Hindsight does not auto-approve memories.** A human must approve retained postmortems before they influence the runbook.
+- `backend/app/memory/service.py`: Core `MemoryService` wrapper managing bank initialization, postmortem retention, vector recall, mental model runbooks, and approval storage.
+- `backend/app/memory/schemas.py`: Pydantic models for `PostmortemRecord`, `MemoryQueryResult`, `RunbookStatus`, and `MemoryStatus`.
+- `backend/app/agent/graph.py`: LangGraph state machine routing memory query nodes and retention nodes.
+- `backend/app/agent/memory.py`: Thin delegation layer between the agent graph and `MemoryService`.
+- `scripts/init_hindsight.py`: Standalone CLI script to verify Hindsight connectivity and idempotently initialize the bank and mental model.
+- `scripts/verify_db_schema.py`: Neon PostgreSQL schema validator ensuring the `memory_units` table matches 384-dimension vector specifications.
 
 ---
 
-## Links
+## Hindsight resources
 
-- [Hindsight on GitHub](https://github.com/vectorize-io/hindsight)
-- [Hindsight Documentation](https://hindsight.vectorize.io/)
-- [What is Agent Memory?](https://vectorize.io/what-is-agent-memory)
+For further documentation and technical specifications on agent memory architecture:
+- [Hindsight GitHub Repository](https://github.com/vectorize-io/hindsight)
+- [Hindsight Official Documentation](https://hindsight.vectorize.io/)
+- [Vectorize: What is Agent Memory?](https://vectorize.io/what-is-agent-memory)

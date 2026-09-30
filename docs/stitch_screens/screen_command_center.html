@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-primary-fixed-variant": "#2f2ebe",
+          "on-surface-variant": "#c7c4d7",
+          "outline-variant": "#464554",
+          "secondary": "#5de6ff",
+          "surface": "#13131b",
+          "on-tertiary-container": "#31057e",
+          "inverse-surface": "#e4e1ed",
+          "on-tertiary": "#381385",
+          "primary-fixed": "#e1e0ff",
+          "secondary-fixed": "#a2eeff",
+          "surface-dim": "#13131b",
+          "surface-container-low": "#1b1b23",
+          "on-error-container": "#ffdad6",
+          "inverse-primary": "#494bd6",
+          "background": "#13131b",
+          "tertiary-fixed-dim": "#cebdff",
+          "secondary-container": "#00cbe6",
+          "on-tertiary-fixed": "#21005e",
+          "on-background": "#e4e1ed",
+          "outline": "#908fa0",
+          "on-secondary-fixed": "#001f25",
+          "surface-container-lowest": "#0d0d15",
+          "surface-variant": "#34343d",
+          "primary": "#c0c1ff",
+          "on-tertiary-fixed-variant": "#4f319c",
+          "primary-fixed-dim": "#c0c1ff",
+          "on-error": "#690005",
+          "on-primary": "#1000a9",
+          "tertiary": "#cebdff",
+          "surface-container": "#1f1f27",
+          "tertiary-fixed": "#e8ddff",
+          "on-primary-fixed": "#07006c",
+          "primary-container": "#8083ff",
+          "inverse-on-surface": "#303038",
+          "error": "#ffb4ab",
+          "on-secondary": "#00363e",
+          "on-secondary-container": "#00515d",
+          "surface-bright": "#393841",
+          "surface-container-high": "#292932",
+          "surface-tint": "#c0c1ff",
+          "on-surface": "#e4e1ed",
+          "secondary-fixed-dim": "#2fd9f4",
+          "tertiary-container": "#9b7fed",
+          "surface-container-highest": "#34343d",
+          "on-primary-container": "#0d0096",
+          "on-secondary-fixed-variant": "#004e5a",
+          "error-container": "#93000a"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "margin": "1rem",
+          "space-sm": "0.25rem",
+          "space-xl": "1.5rem",
+          "gutter": "0.75rem",
+          "space-md": "0.5rem",
+          "space-lg": "1rem",
+          "space-xs": "0.125rem"
+        },
+        "fontFamily": {
+          "headline-sm": ["Inter"],
+          "mono-sm": ["JetBrains Mono"],
+          "headline-md": ["Inter"],
+          "body-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "headline-lg": ["Inter"],
+          "label-caps": ["JetBrains Mono"],
+          "mono-md": ["JetBrains Mono"]
+        },
+        "fontSize": {
+          "headline-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "600"}],
+          "mono-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+          "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400"}],
+          "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0", "fontWeight": "400"}],
+          "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "label-caps": ["10px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+          "mono-md": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.02em", "fontWeight": "400"}]
+        }
+      }
+    }
+  }
+</script><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/></head><body class="bg-surface font-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low z-50 flex flex-col pt-space-xl pb-space-xl"><div class="px-space-xl mb-space-xl flex items-center gap-space-md"><img alt="EpistemicOps Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApvWzfmD9aUnVs3cg65enbN-FLZIi90O78xL-ACvb0I5r2GFTVEIjlu-ONsIVobMVuA8NI3eQcDWYMCUIrKfBeeuRB0RwGQz76HLIwyeg38w_301UkKt-J3TTsMMKoocAog2ECa0ctvEfzbDYE9mWSZ-JF-bKDIMtx_ggdMJdpNBNVi8DaUY2jEtWxiRczlYUUl3SebOz3efsLosGxwyn46DtWYOaRiI5DUCCWRn31p4wM2OMirBqXEQ"/><span class="text-headline-sm font-headline-sm tracking-tight uppercase text-on-surface">EpistemicOps</span></div><nav class="flex-1 px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center justify-between px-space-lg py-space-md rounded-xl transition-all bg-primary-container text-on-primary-container font-semibold" data-path="incidents" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">crisis_alert</span><span class="font-body-md">Incidents</span></div><span class="px-space-sm py-space-xs rounded-full bg-error-container text-on-error-container font-mono-sm">5</span></a><a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="runs" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">play_arrow</span><span class="font-body-md">Runs</span></div><span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-on-surface font-mono-sm">9</span></a><a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="memory" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">neurology</span><span class="font-body-md">Memory</span></div><span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-on-surface font-mono-sm">6</span></a><a class="flex items-center px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="health" href="#"><span class="material-symbols-outlined mr-space-md text-[18px]">pulse_alert</span><span class="font-body-md">Health</span></a></nav></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container border border-outline-variant/30"><span class="material-symbols-outlined text-[16px] text-secondary">hub</span><span class="font-mono-sm text-on-surface">INC-8839: Latency Spike in US-East</span><span class="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer">arrow_drop_down</span></div><div class="flex items-center bg-surface-container rounded-lg p-space-xs border border-outline-variant/30"><button class="px-space-md py-space-xs rounded text-mono-sm bg-primary text-on-primary font-semibold">Live</button><button class="px-space-md py-space-xs rounded text-mono-sm text-on-surface-variant hover:text-on-surface">Baseline</button><button class="px-space-md py-space-xs rounded text-mono-sm text-on-surface-variant hover:text-on-surface">Demo</button></div></div><div class="flex items-center gap-space-xl"><div class="flex items-center gap-space-lg font-mono-sm text-on-surface-variant"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Backend: OK</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Hindsight: OK</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Groq: 98ms</span></div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface bg-surface min-h-[calc(100vh-4rem)]">
+<!-- Main Grid Layout: Center Workbench + Right Hindsight Panel -->
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- CENTER MAIN WORKBENCH -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto p-space-xl gap-space-xl">
+<!-- Top Incident Header for INC-004 -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-xl shadow-sm gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<span class="px-space-md py-space-xs rounded-full bg-error-container text-on-error-container font-mono-sm font-bold">CRITICAL</span>
+<span class="px-space-md py-space-xs rounded-full bg-surface-container-high text-secondary font-mono-sm">bad_deploy</span>
+<span class="px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface-variant font-mono-sm">shipping-service</span>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="flex items-center gap-space-sm px-space-lg py-space-md rounded-xl bg-primary text-on-primary font-headline-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+              Run Investigation
+            </button>
+<button class="flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<h1 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">
+          Deployment rollout not progressing — shipping service <span class="text-secondary font-mono-md">(ImagePullBackOff, revision 8)</span>
+</h1>
+<div class="flex flex-wrap items-center gap-space-xl pt-space-xs font-mono-sm text-on-surface-variant">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">fingerprint</span>
+<span>ID: INC-004</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">schedule</span>
+<span>Started: 22:42:12 UTC</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">bolt</span>
+<span>Automated Remediation: Paused</span>
+</div>
+</div>
+</div>
+<!-- The 3D Epistemic Graph Canvas Area -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm relative h-[380px]">
+<!-- Graph Toolbar / Controls -->
+<div class="absolute top-space-md left-space-md z-10 flex items-center gap-space-sm bg-surface-container/90 backdrop-blur-md p-space-xs rounded-lg border border-outline-variant/20">
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-surface-container-high text-on-surface hover:bg-surface-bright transition-colors">RESET</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-primary/20 text-primary hover:bg-primary/30 transition-colors">FOCUS ROOT</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-surface-container-high text-on-surface hover:bg-surface-bright transition-colors">FIT GRAPH</button>
+</div>
+<!-- Graph Legend -->
+<div class="absolute bottom-space-md left-space-md z-10 flex items-center gap-space-lg bg-surface-container/90 backdrop-blur-md px-space-lg py-space-sm rounded-lg border border-outline-variant/20 font-mono-sm text-on-surface-variant">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-error animate-pulse"></span>
+<span>Critical Node</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span>Healthy Service</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-tertiary"></span>
+<span>Hindsight Memory</span>
+</div>
+</div>
+<!-- Simulated Interactive Graph Canvas -->
+<div class="relative w-full h-full flex items-center justify-center bg-[radial-gradient(circle_at_center,rgba(93,230,255,0.05)_0%,transparent_70%)] overflow-hidden">
+<!-- Ambient Grid Lines Overlay -->
+<div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#8083ff_1px,transparent_1px),linear-gradient(to_bottom,#8083ff_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+<!-- Node: Database -->
+<div class="absolute left-[20%] top-[30%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center border border-outline-variant/40 group-hover:border-secondary transition-all">
+<span class="material-symbols-outlined text-secondary">database</span>
+</div>
+<span class="font-mono-sm text-on-surface-variant bg-surface-container/80 px-space-sm py-space-xs rounded">database-primary</span>
+</div>
+<!-- Node: Order API -->
+<div class="absolute left-[35%][top-[60%] top-[60%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center border border-outline-variant/40 group-hover:border-secondary transition-all">
+<span class="material-symbols-outlined text-secondary">api</span>
+</div>
+<span class="font-mono-sm text-on-surface-variant bg-surface-container/80 px-space-sm py-space-xs rounded">order-processing-api</span>
+</div>
+<!-- Node: Shipping (Central Root with Cyan Pulse) -->
+<div class="absolute left-[55%] top-[40%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="relative">
+<div class="absolute -inset-2 rounded-2xl bg-secondary/30 animate-ping"></div>
+<div class="relative w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center border-2 border-secondary shadow-[0_0_20px_rgba(93,230,255,0.4)]">
+<span class="material-symbols-outlined text-secondary text-[24px]">local_shipping</span>
+</div>
+</div>
+<span class="font-mono-sm font-semibold text-secondary bg-surface-container/90 px-space-md py-space-xs rounded">shipping (INC-004)</span>
+</div>
+<!-- Node: Cache -->
+<div class="absolute left-[75%] top-[65%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center border border-outline-variant/40 group-hover:border-secondary transition-all">
+<span class="material-symbols-outlined text-tertiary">memory</span>
+</div>
+<span class="font-mono-sm text-on-surface-variant bg-surface-container/80 px-space-sm py-space-xs rounded">catalog-cache</span>
+</div>
+<!-- Floating Hindsight Memory Orbital Nodes -->
+<div class="absolute left-[45%] top-[20%] flex items-center gap-space-sm bg-tertiary/10 border border-tertiary/30 px-space-md py-space-xs rounded-full backdrop-blur-md animate-bounce">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-mono-sm text-tertiary">Hindsight Memory #8839 (ImagePullBackOff Match)</span>
+</div>
+</div>
+</div>
+<!-- Bottom Investigation Timeline & Evidence Tabs -->
+<div class="flex flex-col bg-surface-container rounded-xl overflow-hidden shadow-sm">
+<!-- Timeline Header -->
+<div class="flex items-center justify-between px-space-xl py-space-lg border-b border-outline-variant/20">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-primary">timeline</span>
+<span class="font-headline-sm text-on-surface">Investigation Timeline</span>
+</div>
+<div class="flex items-center gap-space-lg font-mono-sm text-on-surface-variant">
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>22:42:16 Incident loaded</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>22:42:18 Memory recalled</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>22:42:19 38 logs retrieved</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>22:42:20 4 metrics retrieved</span>
+</div>
+</div>
+<!-- Evidence Tabs Navigation -->
+<div class="flex items-center gap-space-md px-space-xl pt-space-lg border-b border-outline-variant/20 bg-surface-container-low">
+<button class="px-space-lg py-space-md font-headline-sm text-primary border-b-2 border-primary">LOGS (38)</button>
+<button class="px-space-lg py-space-md font-headline-sm text-on-surface-variant hover:text-on-surface">METRICS (4)</button>
+<button class="px-space-lg py-space-md font-headline-sm text-on-surface-variant hover:text-on-surface">TRACES</button>
+<button class="px-space-lg py-space-md font-headline-sm text-on-surface-variant hover:text-on-surface">PODS (3)</button>
+</div>
+<!-- Evidence Tab Content: Monospace Code Viewer (LOGS) -->
+<div class="p-space-xl bg-surface-container-lowest font-mono-sm text-on-surface-variant flex flex-col gap-space-sm max-h-64 overflow-y-auto">
+<div class="flex items-start gap-space-md">
+<span class="text-outline">22:42:16.102</span>
+<span class="text-on-surface">kubelet[4821]: Failed to pull image "gcr.io/epistemic/shipping:rev-8": rpc error: code = Unknown desc = Error response from daemon: pull access denied</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-outline">22:42:16.488</span>
+<span class="text-error">Back-off pulling image "gcr.io/epistemic/shipping:rev-8"</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-outline">22:42:17.012</span>
+<span class="text-on-surface">Error: ImagePullBackOff for pod shipping-deployment-7d94f6c-8v2kq</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-outline">22:42:18.390</span>
+<span class="text-secondary">EpistemicOps Hindsight engine initiated semantic vector search across 1,420 historical postmortems.</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-outline">22:42:19.112</span>
+<span class="text-tertiary">Match found: INC-001 credential rotation error in artifact registry access. Applying runbook recommendations.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT HINDSIGHT MEMORY PANEL (360px) -->
+<div class="w-[360px] bg-surface-container-low border-l border-outline-variant/10 flex flex-col p-space-xl gap-space-xl overflow-y-auto shrink-0">
+<!-- Hindsight Status Header -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-sm border border-tertiary/20">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary">neurology</span>
+<span class="font-headline-sm text-on-surface">HINDSIGHT MEMORY</span>
+</div>
+<span class="px-space-sm py-space-xs rounded-full bg-tertiary/20 text-tertiary font-mono-sm">Enabled</span>
+</div>
+<p class="font-body-sm text-on-surface-variant">2 relevant memories recalled based on vector embedding similarity and stack trace matching.</p>
+</div>
+<!-- Relevant Knowledge Section -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-on-surface-variant tracking-wider uppercase">RELEVANT KNOWLEDGE</span>
+<span class="font-mono-sm text-secondary">94% match</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-md border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="font-mono-sm font-bold text-on-surface">INC-001: Previous Outage</span>
+<span class="font-mono-sm text-outline">3 weeks ago</span>
+</div>
+<p class="font-body-sm text-on-surface-variant leading-relaxed">
+            "Database connection pool exhaustion caused cascading thread blockages when IAM token expired during automated registry sync."
+          </p>
+<div class="flex items-center gap-space-sm pt-space-xs font-mono-sm text-tertiary">
+<span class="material-symbols-outlined text-[14px]">lightbulb</span>
+<span>Key takeaway: Verify secret sync before rollback.</span>
+</div>
+</div>
+</div>
+<!-- Runbook Section -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-on-surface-variant tracking-wider uppercase">ACTIVE RUNBOOK</span>
+<span class="px-space-sm py-space-xs rounded-full bg-secondary/20 text-secondary font-mono-sm">Ready</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-md border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-on-surface">Microservice Resolution Runbook</span>
+<span class="font-mono-sm text-outline">v2.4</span>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md p-space-sm rounded bg-surface-container-high">
+<span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-mono-sm font-bold">1</span>
+<span class="line-through text-outline">Verify image tag accessibility in Artifact Registry</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded bg-surface-container-high border border-secondary/40">
+<span class="w-5 h-5 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-mono-sm font-bold">2</span>
+<span class="text-on-surface">Rotate service account IAM credentials</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded bg-surface-container-high">
+<span class="w-5 h-5 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-mono-sm font-bold">3</span>
+<span>Trigger manual rollout restart via kubectl</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Learning & Postmortems Section -->
+<div class="flex flex-col gap-space-md">
+<span class="font-label-caps text-on-surface-variant tracking-wider uppercase">LEARNING &amp; POSTMORTEMS</span>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-sm border border-outline-variant/20">
+<div class="flex items-center gap-space-sm text-tertiary font-mono-sm">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+<span>Mental Model Consolidated</span>
+</div>
+<p class="font-body-sm text-on-surface-variant">
+            ImagePullBackOff incidents in US-East are 82% correlated with downstream token expiration rather than malformed tags.
+          </p>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

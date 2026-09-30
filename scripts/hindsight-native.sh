@@ -2,15 +2,15 @@
 #
 # Start Hindsight natively (no Docker) for EpistemicOps.
 #
-# macOS Intel (x86_64) note: the full hindsight-api bundle publishes no Intel-Mac
-# wheels, so this project uses the slim build with the in-process ONNX embedding
-# backend and the flashrank ONNX reranker (no torch / sentence-transformers):
+# macOS / Linux note: the project uses the slim build with the in-process ONNX embedding
+# backend and reciprocal rank fusion (RRF) reranking (no torch / sentence-transformers / external rerankers):
 #   python3.11+ -m venv .venv-hindsight
-#   .venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]' flashrank
-# See docs/LOCAL_SETUP.md.
+#   .venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]'
+# See docs/DEPLOYMENT.md.
 #
 # Data lives in the embedded PostgreSQL (pg0) under ~/.hindsight/data and persists
-# across restarts. The LLM key is read from backend/.env and never hardcoded.
+# across restarts (or Neon PostgreSQL if HINDSIGHT_API_DATABASE_URL is set).
+# The LLM key is read from backend/.env and never hardcoded.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,9 +18,9 @@ VENV="$ROOT/.venv-hindsight"
 PORT="${HINDSIGHT_PORT:-8888}"
 
 if [ ! -x "$VENV/bin/hindsight-api" ]; then
-  echo "hindsight-api not found in $VENV. Install it first (see docs/LOCAL_SETUP.md):"
-  echo "  python3.13 -m venv .venv-hindsight"
-  echo "  .venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]' flashrank"
+  echo "hindsight-api not found in $VENV. Install it first:"
+  echo "  python3.11+ -m venv .venv-hindsight"
+  echo "  .venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]'"
   exit 1
 fi
 
@@ -42,9 +42,9 @@ export HINDSIGHT_API_LLM_GROQ_SERVICE_TIER="${HINDSIGHT_LLM_GROQ_SERVICE_TIER:-o
 
 # ── Local, torch-free embedding + reranker (Intel-Mac compatible) ─────────────
 export HINDSIGHT_API_EMBEDDINGS_PROVIDER="onnx"
-export HINDSIGHT_API_RERANKER_PROVIDER="flashrank"
+export HINDSIGHT_API_RERANKER_PROVIDER="rrf"
 # First run downloads a small ONNX embedding model; allow time for it.
 export HINDSIGHT_API_MODEL_INIT_TIMEOUT="${HINDSIGHT_API_MODEL_INIT_TIMEOUT:-1200}"
 
-echo "Starting native Hindsight on http://localhost:$PORT (provider=$HINDSIGHT_API_LLM_PROVIDER, embeddings=onnx, reranker=flashrank, data in ~/.hindsight/data)"
+echo "Starting native Hindsight on http://localhost:$PORT (provider=$HINDSIGHT_API_LLM_PROVIDER, embeddings=onnx, reranker=rrf, data in ~/.hindsight/data)"
 exec "$VENV/bin/hindsight-api" --port "$PORT"

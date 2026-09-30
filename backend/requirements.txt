@@ -12,8 +12,7 @@ httpx>=0.27.0
 
 # AI / agent
 langgraph>=0.2.60
-langchain-google-genai>=4.4.0
-# Optional free-tier provider (used when LLM_PROVIDER=groq or GROQ_API_KEY is set)
+# Free-tier provider (Groq recommended by the hackathon)
 langchain-groq>=0.2.0
 langchain-core>=0.3.0
 

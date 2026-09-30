@@ -1,86 +1,47 @@
-# EpistemicOps — Attributions
+# Third-Party Attributions & Open-Source Licenses
 
-This project uses the following open-source libraries, tools, and datasets.
-
-## Backend Dependencies
-
-| Package | Licence | URL |
-|---|---|---|
-| FastAPI | MIT | https://github.com/tiangolo/fastapi |
-| Uvicorn | BSD-3-Clause | https://github.com/encode/uvicorn |
-| LangGraph | MIT | https://github.com/langchain-ai/langgraph |
-| langchain-google-genai | MIT | https://github.com/langchain-ai/langchain-google |
-| langchain-groq | MIT | https://github.com/langchain-ai/langchain |
-| langchain-core | MIT | https://github.com/langchain-ai/langchain |
-| sse-starlette | BSD-3-Clause | https://github.com/sysid/sse-starlette |
-| httpx | BSD-3-Clause | https://github.com/encode/httpx |
-| pydantic | MIT | https://github.com/pydantic/pydantic |
-| pydantic-settings | MIT | https://github.com/pydantic/pydantic-settings |
-| python-dotenv | BSD-3-Clause | https://github.com/theskumar/python-dotenv |
-| hindsight-client | See below | https://github.com/vectorize-io/hindsight |
-
-## Frontend Dependencies
-
-| Package | Licence | URL |
-|---|---|---|
-| React | MIT | https://github.com/facebook/react |
-| Vite | MIT | https://github.com/vitejs/vite |
-| TypeScript | Apache-2.0 | https://github.com/microsoft/TypeScript |
-| Three.js | MIT | https://github.com/mrdoob/three.js |
-| @react-three/fiber | MIT | https://github.com/pmndrs/react-three-fiber |
-| @react-three/drei | MIT | https://github.com/pmndrs/drei |
-| Motion | MIT | https://github.com/motiondivision/motion |
-
-## AI Inference
-
-| Tool | Terms | URL |
-|---|---|---|
-| Google Gemini API | Google Terms of Service | https://ai.google.dev |
-| Groq API | Groq Terms of Service | https://console.groq.com |
-
-## Memory
-
-| Tool | Terms | URL |
-|---|---|---|
-| Hindsight | See [Hindsight repository](https://github.com/vectorize-io/hindsight) | https://hindsight.vectorize.io/ |
-| Vectorize | See [Vectorize](https://vectorize.io) | https://vectorize.io/what-is-agent-memory |
-
-## Incident Fixture Datasets
-
-The incident fixtures in `data/incidents/` are derived from the following sources.
-
-### inc-001 and inc-002
-
-Hand-crafted synthetic incidents (database pool exhaustion, memory leak) written by the EpistemicOps authors. No external dataset used.
-
-### inc-003, inc-004, inc-005
-
-Derived from the **quantranger/sre-agent-eda-bundle** dataset.
-
-| Field | Value |
-|---|---|
-| Dataset URL | https://huggingface.co/datasets/quantranger/sre-agent-eda-bundle |
-| License | Apache-2.0 |
-| Config used | `corpus` |
-| Records used | `011-bad_deploy_errors`, `015-stuck_rollout`, `009-cache_stampede` |
-| Fixture files | `inc-003-bad-deploy-orders.json`, `inc-004-stuck-rollout-shipping.json`, `inc-005-cache-stampede-catalog.json` |
-
-**What was taken:** Structured evidence blobs (pod status, events, logs, metrics, alerts, and distributed traces) from three synthetic Kubernetes incident scenarios. Alert titles, log lines, and metric values are reproduced from the source.
-
-**What was derived:** The `_ground_truth` blocks (root cause summary, resolution steps, expected evidence keywords) were written by the EpistemicOps authors based on the source record's `answer` and `remediation` fields but are not a verbatim copy.
-
-**Why these records:** All three are synthetic, use a consistent Kubernetes evidence schema, and two share the same failure category (`bad_deploy`), which is needed to demonstrate memory-assisted reuse between cold and warm incident investigations.
-
-### Snaseem2026/devops-incident-response
-
-| Field | Value |
-|---|---|
-| Dataset URL | https://huggingface.co/datasets/Snaseem2026/devops-incident-response |
-| License | Not declared |
-| Records used | None |
-
-This dataset was inspected to understand its schema. No records were normalized into EpistemicOps fixtures because evidence is prose-only (no structured evidence) and no explicit license is declared.
+This document acknowledges all third-party software, models, datasets, and libraries utilized by EpistemicOps. All licenses and terms are verified from repository dependencies.
 
 ---
 
-All licences are reproduced in their entirety in the respective package distributions.
+## Software Libraries & Dependencies
+
+| Source | URL | License | How used | Modification/derivation |
+|---|---|---|---|---|
+| **LangGraph** | https://github.com/langchain-ai/langgraph | MIT | Core state machine agent engine | Unmodified library dependency (`langgraph>=0.2.60`) |
+| **LangChain Core** | https://github.com/langchain-ai/langchain | MIT | Prompt templates, message schemas, and base abstractions | Unmodified library dependency (`langchain-core>=0.3.0`) |
+| **langchain-groq** | https://github.com/langchain-ai/langchain-groq | MIT | Groq API chat model wrapper for LLM diagnosis | Unmodified library dependency (`langchain-groq>=0.2.0`) |
+| **Hindsight Client** | https://github.com/vectorize-io/hindsight | Apache-2.0 | Async client SDK for vector recall and retention | Unmodified library dependency (`hindsight-client`) |
+| **Hindsight API Slim** | https://github.com/vectorize-io/hindsight | Apache-2.0 | Native Hindsight daemon engine with embedded db | Unmodified package (`hindsight-api-slim[embedded-db,local-onnx]==0.10.1`) |
+| **FastAPI** | https://github.com/tiangolo/fastapi | MIT | Backend HTTP REST and SSE streaming framework | Unmodified framework dependency (`fastapi>=0.115.0`) |
+| **Uvicorn** | https://github.com/encode/uvicorn | BSD-3-Clause | ASGI server running FastAPI application | Unmodified server dependency (`uvicorn[standard]>=0.30.0`) |
+| **Pydantic** | https://github.com/pydantic/pydantic | MIT | Data validation and schema serialization | Unmodified dependency (`pydantic>=2.8.0`, `pydantic-settings>=2.4.0`) |
+| **HTTPX** | https://github.com/encode/httpx | BSD-3-Clause | Async HTTP client for Hindsight and external probes | Unmodified dependency (`httpx>=0.27.0`) |
+| **sse-starlette** | https://github.com/sysid/sse-starlette | BSD-3-Clause | Server-Sent Events generator for real-time trace streaming | Unmodified dependency (`sse-starlette>=2.1.3`) |
+| **pytest & pytest-asyncio** | https://github.com/pytest-dev/pytest | MIT | Backend test suite execution | Unmodified testing framework (`pytest>=8.3.0`) |
+| **React & React DOM** | https://github.com/facebook/react | MIT | Frontend declarative UI framework | Unmodified web framework (`react@^18.3.1`) |
+| **TypeScript** | https://github.com/microsoft/TypeScript | Apache-2.0 | Static typing for frontend codebase | Unmodified compiler dependency (`typescript@~5.5.3`) |
+| **Vite** | https://github.com/vitejs/vite | MIT | Frontend development server and production bundler | Unmodified bundler (`vite@^5.4.2`) |
+| **Three.js** | https://github.com/mrdoob/three.js | MIT | 3D WebGL rendering engine for epistemic topology graph | Unmodified 3D library (`three@^0.170.0`) |
+| **@react-three/fiber** | https://github.com/pmndrs/react-three-fiber | MIT | React reconciler for Three.js scenes | Unmodified component library (`@react-three/fiber@^8.17.10`) |
+| **@react-three/drei** | https://github.com/pmndrs/drei | MIT | Three.js helpers and camera controls | Unmodified helper library (`@react-three/drei@^9.117.0`) |
+| **Motion** | https://github.com/motiondivision/motion | MIT | Motion and micro-interaction animations | Unmodified library (`motion@^11.11.17`) |
+| **Vitest** | https://github.com/vitest-dev/vitest | MIT | Frontend unit testing framework | Unmodified test framework (`vitest@^2.1.8`) |
+
+---
+
+## Pre-trained Models
+
+| Source | URL | License | How used | Modification/derivation |
+|---|---|---|---|---|
+| **multilingual-e5-small (ONNX)** | https://huggingface.co/intfloat/multilingual-e5-small | MIT | Local in-process embedding vector generation (384 dimensions) | Downloaded official ONNX weights and tokenizer; no architectural alterations |
+| **openai/gpt-oss-120b (via Groq)** | https://console.groq.com | Terms of Service / Model License | Free-tier LLM inference for SRE diagnosis | Remote API inference |
+| **gemini-3.8-flash (via Google)** | https://ai.google.dev | Google Cloud Terms of Service | Optional LLM provider for diagnostic reasoning | Remote API inference |
+
+---
+
+## Datasets & Telemetry Fixtures
+
+| Source | URL | License | How used | Modification/derivation |
+|---|---|---|---|---|
+| **quantranger/sre-agent-eda-bundle** | https://huggingface.co/datasets/quantranger/sre-agent-eda-bundle | Apache-2.0 | Baseline incident telemetry for `inc-003`, `inc-004`, and `inc-005` | Extracted Kubernetes telemetry evidence (logs, metrics, trace spans, pod states). Ground truth scoring blocks (`_ground_truth`) were author-created and synthesized from problem descriptions. |

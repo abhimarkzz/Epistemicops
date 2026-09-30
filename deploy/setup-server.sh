@@ -74,12 +74,12 @@ fi
 backend/.venv/bin/pip install --upgrade pip
 backend/.venv/bin/pip install -r backend/requirements.txt
 
-# Native Hindsight venv (with ONNX embedding and flashrank reranker)
+# Native Hindsight venv (with ONNX embedding and RRF reranker)
 if [ ! -d ".venv-hindsight" ]; then
     python3 -m venv .venv-hindsight
 fi
 .venv-hindsight/bin/pip install --upgrade pip
-.venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]' flashrank
+.venv-hindsight/bin/pip install 'hindsight-api-slim[local-onnx,embedded-db]'
 
 # Prepare environment file if missing
 if [ ! -f "backend/.env" ]; then

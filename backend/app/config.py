@@ -50,16 +50,15 @@ class Settings(BaseSettings):
     def active_provider(self) -> str:
         """Which LLM provider the agent will use.
 
-        Honors an explicit LLM_PROVIDER; otherwise prefers Groq when a Groq key
-        is configured (so a blocked Gemini key never stalls the live demo), and
-        falls back to Gemini.
+        Honors an explicit LLM_PROVIDER; otherwise prefers Groq (zero-card free tier)
+        and falls back to Groq.
         """
         explicit = self.llm_provider.strip().lower()
-        if explicit in ("gemini", "groq"):
+        if explicit in ("groq", "gemini"):
             return explicit
         if self.groq_api_key:
             return "groq"
-        return "gemini"
+        return "groq"
 
 
 settings = Settings()

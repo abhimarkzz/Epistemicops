@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<style>
+  @layer base {
+    html, body { margin: 0; padding: 0; }
+    body { overscroll-behavior: none; }
+    main>:first-child { margin-top: 0 !important; }
+    main>:last-child { margin-bottom: 0 !important; }
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #E9E3D8; }
+  ::-webkit-scrollbar-thumb { background: #D4CCBF; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #91897F; }
+</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "canvas": "#F4F0E8",
+          "surface-soft": "#E9E3D8",
+          "border-color": "#D4CCBF",
+          "primary-text": "#2B2723",
+          "secondary-text": "#6E675F",
+          "muted-text": "#91897F",
+          "brand-oxblood": "#7A3040",
+          "terracotta": "#C66A4A",
+          "copper": "#B77A52",
+          "dusty-plum": "#80627C",
+          "warm-teal": "#4E7773",
+          "sage": "#6B775E",
+          "critical": "#A83B3B",
+          "warning": "#B56A28",
+          
+          "primary-container": "#7A3040",
+          "on-surface-variant": "#6E675F",
+          "on-primary": "#FFFFFF",
+          "secondary": "#C66A4A",
+          "tertiary-fixed": "#F4EAEC",
+          "error": "#A83B3B",
+          "on-tertiary-container": "#7A3040",
+          "on-error-container": "#A83B3B",
+          "outline-variant": "#D4CCBF",
+          "on-primary-container": "#FFFFFF",
+          "tertiary-fixed-dim": "#E9E3D8",
+          "on-tertiary-fixed-variant": "#80627C",
+          "secondary-fixed-dim": "#C66A4A",
+          "on-error": "#FFFFFF",
+          "outline": "#91897F",
+          "surface-container-low": "#FBF9F5",
+          "surface": "#F4F0E8",
+          "on-tertiary-fixed": "#2B2723",
+          "error-container": "#FCE8E8",
+          "on-surface": "#2B2723",
+          "surface-container-lowest": "#FFFFFF",
+          "surface-bright": "#FFFFFF",
+          "primary": "#7A3040",
+          "primary-fixed-dim": "#7A3040",
+          "secondary-fixed": "#FCE8E8",
+          "on-secondary": "#FFFFFF",
+          "background": "#F4F0E8",
+          "surface-container-high": "#E9E3D8",
+          "on-secondary-fixed": "#2B2723",
+          "surface-variant": "#E9E3D8",
+          "on-secondary-container": "#7A3040",
+          "on-primary-fixed-variant": "#FFFFFF",
+          "surface-container-highest": "#E9E3D8",
+          "on-background": "#2B2723",
+          "inverse-on-surface": "#FBF9F5",
+          "on-tertiary": "#FFFFFF",
+          "surface-tint": "#7A3040",
+          "secondary-container": "#F8D7D1",
+          "tertiary": "#80627C",
+          "primary-fixed": "#FCE8E8",
+          "inverse-primary": "#C66A4A",
+          "on-primary-fixed": "#FFFFFF",
+          "on-secondary-fixed-variant": "#6E675F",
+          "surface-dim": "#E9E3D8",
+          "tertiary-container": "#F4EAEC",
+          "surface-container": "#FBF9F5",
+          "inverse-surface": "#2B2723"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "space-sm": "0.25rem",
+          "margin": "1rem",
+          "space-lg": "1rem",
+          "space-md": "0.5rem",
+          "space-xl": "1.5rem",
+          "gutter": "0.75rem",
+          "space-xs": "0.125rem"
+        },
+        "fontFamily": {
+          "headline-sm": ["Inter", "sans-serif"],
+          "body-md": ["Inter", "sans-serif"],
+          "mono-md": ["JetBrains Mono", "monospace"],
+          "mono-sm": ["JetBrains Mono", "monospace"],
+          "headline-lg": ["Inter", "sans-serif"],
+          "body-sm": ["Inter", "sans-serif"],
+          "headline-md": ["Inter", "sans-serif"],
+          "label-caps": ["JetBrains Mono", "monospace"]
+        },
+        "fontSize": {
+          "headline-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "600"}],
+          "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400"}],
+          "mono-md": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+          "mono-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+          "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0", "fontWeight": "400"}],
+          "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "label-caps": ["10px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+        }
+      }
+    }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-canvas font-body-md text-primary-text">
+<!-- Persistent Left Sidebar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-border-color z-50 flex flex-col pt-space-xl pb-space-xl">
+<div class="px-space-xl mb-space-xl flex items-center gap-space-md">
+<img alt="EpistemicOps Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1V1OKAxxrp8o-DcIi_KQ4UDtiJsVte5ZCbh3SsjxHrCqxWJ5Di6EWEVz_OhgDfQQgxPUKKKiU42ZQZATBR77CHSySuLm8fDcHsmconf6_8fKP7tw2RCa28RlsmIea6XY792aiAriZtfZ4UzpVs0pEphQYrBZ12SOKYyUh7sp12X0HKuGrEiqSOEZZOmYCTehn4P-p8iCH6W_MmZ4MEMmeRfR0cV2lankSG9-5uvjTg4UzorOxWcuwuuI9AA"/>
+<span class="text-headline-sm font-headline-sm tracking-tight uppercase text-primary-text font-bold">EpistemicOps</span>
+</div>
+<nav class="flex-1 px-space-md flex flex-col gap-space-xs overflow-y-auto">
+<a class="flex items-center justify-between px-space-lg py-space-md rounded-xl transition-all bg-primary-container text-on-primary font-semibold" data-path="incidents" href="#">
+<div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">crisis_alert</span><span class="font-body-md">Incidents</span></div>
+<span class="px-space-sm py-space-xs rounded-full bg-error-container text-critical font-mono-sm font-bold">5</span>
+</a>
+<a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="runs" href="#">
+<div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">play_arrow</span><span class="font-body-md">Runs</span></div>
+<span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-primary-text font-mono-sm">9</span>
+</a>
+<a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="memory" href="#">
+<div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">neurology</span><span class="font-body-md">Memory</span></div>
+<span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-primary-text font-mono-sm">6</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="health" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">pulse_alert</span><span class="font-body-md">Health</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="services" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">dns</span><span class="font-body-md">Services</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="graph" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">hub</span><span class="font-body-md">Graph</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="runbooks" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">menu_book</span><span class="font-body-md">Runbooks</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all" data-path="evidence" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">policy</span><span class="font-body-md">Evidence</span>
+</a>
+<a class="flex items-center px-space-lg py-space-md rounded-xl text-secondary-text hover:bg-surface-container-high hover:text-primary-text transition-all mt-auto" data-path="settings" href="#">
+<span class="material-symbols-outlined mr-space-md text-[18px]">settings</span><span class="font-body-md">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Shell Container -->
+<div class="pl-64">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-low/90 backdrop-blur-xl border-b border-border-color z-40 flex items-center justify-between px-space-xl">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container border border-border-color">
+<span class="material-symbols-outlined text-[16px] text-terracotta">hub</span>
+<span class="font-mono-sm text-primary-text">INC-004: shipping-service (ImagePullBackOff)</span>
+<span class="material-symbols-outlined text-[14px] text-secondary-text cursor-pointer">arrow_drop_down</span>
+</div>
+<div class="flex items-center bg-surface-container rounded-lg p-space-xs border border-border-color">
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-brand-oxblood text-on-primary font-semibold">Live</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm text-secondary-text hover:text-primary-text">Baseline</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm text-secondary-text hover:text-primary-text">Demo</button>
+</div>
+</div>
+<div class="flex items-center gap-space-xl">
+<div class="flex items-center gap-space-lg font-mono-sm text-secondary-text">
+<div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-sage"></span><span>Backend: OK</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-sage"></span><span>Hindsight: OK</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-sage"></span><span>Groq: 98ms</span></div>
+</div>
+<div class="w-8 h-8 rounded-full bg-brand-oxblood flex items-center justify-center cursor-pointer hover:opacity-90">
+<span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="relative pt-16 bg-canvas min-h-screen">
+<div class="flex flex-col w-full text-primary-text bg-canvas min-h-[calc(100vh-4rem)]">
+<!-- Main Grid Layout: Center Workbench + Right Hindsight Panel -->
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- CENTER MAIN WORKBENCH -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto p-space-xl gap-space-xl">
+<!-- Hero Incident Banner -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-xl shadow-sm gap-space-md border border-border-color">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<span class="px-space-md py-space-xs rounded-full bg-error-container text-critical font-mono-sm font-bold">CRITICAL</span>
+<span class="px-space-md py-space-xs rounded-full bg-surface-container-high text-terracotta font-mono-sm font-bold">P0 SEVERITY</span>
+<span class="px-space-md py-space-xs rounded-full bg-surface-container-high text-secondary-text font-mono-sm">shipping-service</span>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="flex items-center gap-space-sm px-space-lg py-space-md rounded-xl bg-brand-oxblood text-on-primary font-headline-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                  Run Investigation
+                </button>
+<button class="flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high text-secondary-text hover:text-primary-text transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<h1 class="text-headline-lg font-headline-lg text-primary-text tracking-tight">
+              Deployment rollout not progressing — shipping service <span class="text-terracotta font-mono-md">(ImagePullBackOff, revision 8)</span>
+</h1>
+<div class="flex flex-wrap items-center gap-space-xl pt-space-xs font-mono-sm text-secondary-text">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-terracotta">fingerprint</span>
+<span>ID: INC-004</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-terracotta">schedule</span>
+<span>Started: 22:42:12 UTC (Active for 14m 32s)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[16px] text-terracotta">bolt</span>
+<span>Automated Remediation: Paused</span>
+</div>
+</div>
+</div>
+<!-- Interactive Epistemic Graph Centerpiece (Dark Espresso Terminal BG as requested) -->
+<div class="flex flex-col bg-[#2B2723] rounded-xl overflow-hidden shadow-sm relative h-[420px] border border-[#443F3A]">
+<!-- Graph Toolbar / Controls -->
+<div class="absolute top-space-md left-space-md z-10 flex items-center gap-space-sm bg-[#1E1B18]/90 backdrop-blur-md p-space-xs rounded-lg border border-[#443F3A] text-[#C9C0B4]">
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-[#3A3530] text-[#F4F0E8] hover:bg-[#4E4842] transition-colors">RESET</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-terracotta/20 text-terracotta hover:bg-terracotta/30 transition-colors">FOCUS ROOT</button>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-[#3A3530] text-[#F4F0E8] hover:bg-[#4E4842] transition-colors">FIT GRAPH</button>
+<span class="text-muted-text">|</span>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-[#3A3530] text-[#F4F0E8] hover:bg-[#4E4842] transition-colors"><span class="material-symbols-outlined text-[14px]">zoom_in</span></button>
+<button class="px-space-md py-space-xs rounded text-mono-sm bg-[#3A3530] text-[#F4F0E8] hover:bg-[#4E4842] transition-colors"><span class="material-symbols-outlined text-[14px]">zoom_out</span></button>
+</div>
+<!-- Graph Legend -->
+<div class="absolute bottom-space-md left-space-md z-10 flex items-center gap-space-lg bg-[#1E1B18]/90 backdrop-blur-md px-space-lg py-space-sm rounded-lg border border-[#443F3A] font-mono-sm text-[#C9C0B4]">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-critical animate-pulse"></span>
+<span>Critical Node</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-terracotta"></span>
+<span>Healthy Service</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-dusty-plum"></span>
+<span>Hindsight Memory</span>
+</div>
+</div>
+<!-- Simulated Interactive Graph Canvas -->
+<div class="relative w-full h-full flex items-center justify-center bg-[radial-gradient(circle_at_center,rgba(198,106,74,0.08)_0%,transparent_70%)] overflow-hidden">
+<!-- Ambient Grid Lines Overlay -->
+<div class="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#C9C0B4_1px,transparent_1px),linear-gradient(to_bottom,#C9C0B4_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+<!-- SVG Connectors / Edges -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<line stroke="#6E675F" stroke-dasharray="4" stroke-width="2" x1="25%" x2="45%" y1="35%" y2="55%"></line>
+<line stroke="#C66A4A" stroke-width="2" x1="45%" x2="60%" y1="55%" y2="40%"></line>
+<line stroke="#6E675F" stroke-width="2" x1="60%" x2="78%" y1="40%" y2="65%"></line>
+<line stroke="#80627C" stroke-dasharray="2" stroke-width="2" x1="60%" x2="52%" y1="40%" y2="22%"></line>
+</svg>
+<!-- Node: Database -->
+<div class="absolute left-[20%] top-[30%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-[#3A3530] flex items-center justify-center border border-[#554F49] group-hover:border-terracotta transition-all shadow-lg">
+<span class="material-symbols-outlined text-[#C9C0B4]">database</span>
+</div>
+<span class="font-mono-sm text-[#C9C0B4] bg-[#1E1B18]/90 px-space-sm py-space-xs rounded border border-[#443F3A]">database-primary</span>
+</div>
+<!-- Node: Order API -->
+<div class="absolute left-[40%] top-[50%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-[#3A3530] flex items-center justify-center border border-[#554F49] group-hover:border-terracotta transition-all shadow-lg">
+<span class="material-symbols-outlined text-[#C9C0B4]">api</span>
+</div>
+<span class="font-mono-sm text-[#C9C0B4] bg-[#1E1B18]/90 px-space-sm py-space-xs rounded border border-[#443F3A]">order-processing-api</span>
+</div>
+<!-- Node: Shipping (Central Root with Terracotta Pulse) -->
+<div class="absolute left-[58%] top-[35%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="relative">
+<div class="absolute -inset-2 rounded-2xl bg-terracotta/30 animate-ping"></div>
+<div class="relative w-16 h-16 rounded-xl bg-[#3A3530] flex items-center justify-center border-2 border-terracotta shadow-[0_0_25px_rgba(198,106,74,0.4)]">
+<span class="material-symbols-outlined text-terracotta text-[26px]">local_shipping</span>
+</div>
+</div>
+<span class="font-mono-sm font-semibold text-terracotta bg-[#1E1B18]/95 px-space-md py-space-xs rounded border border-terracotta/40 shadow-md">shipping-service (INC-004)</span>
+</div>
+<!-- Node: Cache -->
+<div class="absolute left-[75%] top-[60%] flex flex-col items-center gap-space-xs cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-[#3A3530] flex items-center justify-center border border-[#554F49] group-hover:border-terracotta transition-all shadow-lg">
+<span class="material-symbols-outlined text-dusty-plum">memory</span>
+</div>
+<span class="font-mono-sm text-[#C9C0B4] bg-[#1E1B18]/90 px-space-sm py-space-xs rounded border border-[#443F3A]">catalog-cache</span>
+</div>
+<!-- Floating Hindsight Memory Orbital Nodes -->
+<div class="absolute left-[48%] top-[18%] flex items-center gap-space-sm bg-dusty-plum/20 border border-dusty-plum/40 px-space-md py-space-xs rounded-full backdrop-blur-md shadow-lg animate-bounce">
+<span class="w-2 h-2 rounded-full bg-dusty-plum animate-pulse"></span>
+<span class="font-mono-sm text-[#F4EAEC]">Hindsight Memory #8839 (ImagePullBackOff Match)</span>
+</div>
+</div>
+</div>
+<!-- Bottom Investigation Timeline & Evidence Tabs -->
+<div class="flex flex-col bg-surface-container rounded-xl overflow-hidden shadow-sm border border-border-color">
+<!-- Timeline Header -->
+<div class="flex items-center justify-between px-space-xl py-space-lg border-b border-border-color">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-brand-oxblood">timeline</span>
+<span class="font-headline-sm text-primary-text">Investigation Timeline &amp; Live Telemetry</span>
+</div>
+<div class="flex items-center gap-space-lg font-mono-sm text-secondary-text">
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>22:42:16 Loaded</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>22:42:18 Recalled</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>38 logs</span>
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>4 metrics</span>
+</div>
+</div>
+<!-- Evidence Tabs Navigation -->
+<div class="flex items-center gap-space-md px-space-xl pt-space-lg border-b border-border-color bg-surface-container-low">
+<button class="px-space-lg py-space-md font-headline-sm text-brand-oxblood border-b-2 border-brand-oxblood">LOGS (38)</button>
+<button class="px-space-lg py-space-md font-headline-sm text-secondary-text hover:text-primary-text transition-colors">METRICS (4)</button>
+<button class="px-space-lg py-space-md font-headline-sm text-secondary-text hover:text-primary-text transition-colors">TRACES</button>
+<button class="px-space-lg py-space-md font-headline-sm text-secondary-text hover:text-primary-text transition-colors">PODS (3)</button>
+</div>
+<!-- Evidence Tab Content: Monospace Code Viewer (LOGS) -->
+<div class="p-space-xl bg-surface-container-lowest font-mono-sm text-secondary-text flex flex-col gap-space-sm max-h-64 overflow-y-auto">
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:16.102</span>
+<span class="text-primary-text">kubelet[4821]: Failed to pull image "gcr.io/epistemic/shipping:rev-8": rpc error: code = Unknown desc = Error response from daemon: pull access denied</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:16.488</span>
+<span class="text-critical font-bold">Back-off pulling image "gcr.io/epistemic/shipping:rev-8"</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:17.012</span>
+<span class="text-primary-text">Error: ImagePullBackOff for pod shipping-deployment-7d94f6c-8v2kq</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:18.390</span>
+<span class="text-terracotta">EpistemicOps Hindsight engine initiated semantic vector search across 1,420 historical postmortems.</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:19.112</span>
+<span class="text-dusty-plum">Match found: INC-001 credential rotation error in artifact registry access. Applying runbook recommendations.</span>
+</div>
+<div class="flex items-start gap-space-md">
+<span class="text-muted-text">22:42:20.004</span>
+<span class="text-primary-text">kubectl describe pod shipping-deployment-7d94f6c-8v2kq -n production -&gt; Status: ImagePullBackOff</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT HINDSIGHT MEMORY PANEL (360px) -->
+<div class="w-[360px] bg-surface-container-low border-l border-border-color flex flex-col p-space-xl gap-space-xl overflow-y-auto shrink-0">
+<!-- Hindsight Status Header -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-sm border border-dusty-plum/30 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-dusty-plum">neurology</span>
+<span class="font-headline-sm text-primary-text">HINDSIGHT MEMORY</span>
+</div>
+<span class="px-space-sm py-space-xs rounded-full bg-dusty-plum/20 text-dusty-plum font-mono-sm font-semibold">Enabled</span>
+</div>
+<p class="font-body-sm text-secondary-text">2 relevant memories recalled based on vector embedding similarity and stack trace matching.</p>
+</div>
+<!-- Relevant Knowledge Section -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-secondary-text tracking-wider uppercase">RELEVANT KNOWLEDGE</span>
+<span class="font-mono-sm text-terracotta font-bold">94% match</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-md border border-border-color shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-mono-sm font-bold text-primary-text">INC-001: Previous Outage</span>
+<span class="font-mono-sm text-muted-text">3 weeks ago</span>
+</div>
+<p class="font-body-sm text-secondary-text leading-relaxed">
+                "Database connection pool exhaustion caused cascading thread blockages when IAM token expired during automated registry sync."
+              </p>
+<div class="flex items-center gap-space-sm pt-space-xs font-mono-sm text-dusty-plum bg-dusty-plum/5 p-space-sm rounded-lg border border-dusty-plum/20">
+<span class="material-symbols-outlined text-[16px]">lightbulb</span>
+<span>Key takeaway: Verify secret sync before rollback.</span>
+</div>
+</div>
+</div>
+<!-- Runbook Section -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-secondary-text tracking-wider uppercase">ACTIVE RUNBOOK</span>
+<span class="px-space-sm py-space-xs rounded-full bg-terracotta/20 text-terracotta font-mono-sm font-bold">Ready</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-md border border-border-color shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-primary-text">Microservice Resolution Runbook</span>
+<span class="font-mono-sm text-muted-text">v2.4</span>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-secondary-text">
+<div class="flex items-center gap-space-md p-space-sm rounded-lg bg-surface-container-high border border-border-color">
+<span class="w-5 h-5 rounded-full bg-brand-oxblood text-on-primary flex items-center justify-center font-mono-sm font-bold shrink-0">1</span>
+<span class="line-through text-muted-text">Verify image tag accessibility in Artifact Registry</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded-lg bg-surface-container-high border border-terracotta/40 shadow-sm">
+<span class="w-5 h-5 rounded-full bg-terracotta text-on-secondary flex items-center justify-center font-mono-sm font-bold shrink-0">2</span>
+<span class="text-primary-text font-medium">Rotate service account IAM credentials</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded-lg bg-surface-container-high border border-border-color">
+<span class="w-5 h-5 rounded-full bg-surface-variant text-secondary-text flex items-center justify-center font-mono-sm font-bold shrink-0">3</span>
+<span>Trigger manual rollout restart via kubectl</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Learning & Postmortems Section -->
+<div class="flex flex-col gap-space-md">
+<span class="font-label-caps text-secondary-text tracking-wider uppercase">LEARNING &amp; POSTMORTEMS</span>
+<div class="flex flex-col bg-surface-container rounded-xl p-space-lg gap-space-sm border border-border-color shadow-sm">
+<div class="flex items-center gap-space-sm text-dusty-plum font-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+<span>Mental Model Consolidated</span>
+</div>
+<p class="font-body-sm text-secondary-text leading-relaxed">
+                ImagePullBackOff incidents in US-East are 82% correlated with downstream token expiration rather than malformed tags.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

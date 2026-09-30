@@ -18,7 +18,7 @@ Environment="HINDSIGHT_API_LLM_MAX_CONCURRENT=1"
 Environment="HINDSIGHT_API_ENABLE_OBSERVATIONS=true"
 Environment="HINDSIGHT_API_LLM_GROQ_SERVICE_TIER=on_demand"
 Environment="HINDSIGHT_API_EMBEDDINGS_PROVIDER=onnx"
-Environment="HINDSIGHT_API_RERANKER_PROVIDER=flashrank"
+Environment="HINDSIGHT_API_RERANKER_PROVIDER=rrf"
 Environment="HINDSIGHT_API_MODEL_INIT_TIMEOUT=1200"
 
 ExecStart=/home/epistemicops/epistemicops/.venv-hindsight/bin/hindsight-api --port 8888

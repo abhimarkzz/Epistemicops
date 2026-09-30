@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.crt-scanline{background:linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));background-size:100% 2px, 3px 100%;pointer-events:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode": "class", "theme": {"extend": {"colors": {"tertiary-fixed": "#ffdad6", "on-tertiary": "#690006", "surface-container-lowest": "#0e0e0e", "secondary-container": "#fdaf00", "on-primary-fixed-variant": "#0b5300", "on-error": "#690005", "primary-container": "#33ff00", "surface-variant": "#353534", "on-secondary-container": "#694600", "on-primary-fixed": "#022100", "error-container": "#93000a", "tertiary-fixed-dim": "#ffb4ac", "secondary-fixed-dim": "#ffba43", "surface-container": "#201f1f", "on-tertiary-fixed-variant": "#93000d", "outline": "#85967c", "surface-container-highest": "#353534", "on-tertiary-fixed": "#410002", "on-primary": "#053900", "surface-bright": "#3a3939", "on-error-container": "#ffdad6", "inverse-on-surface": "#313030", "on-surface-variant": "#baccaf", "error": "#ffb4ab", "secondary": "#ffd393", "secondary-fixed": "#ffddaf", "on-primary-container": "#127100", "primary-fixed": "#79ff5a", "outline-variant": "#3c4b35", "on-tertiary-container": "#c50016", "inverse-surface": "#e5e2e1", "inverse-primary": "#116e00", "on-background": "#e5e2e1", "primary-fixed-dim": "#2de500", "surface": "#131313", "surface-dim": "#131313", "tertiary-container": "#ffd3ce", "on-secondary": "#432c00", "on-secondary-fixed-variant": "#614000", "on-secondary-fixed": "#281800", "on-surface": "#e5e2e1", "surface-container-high": "#2a2a2a", "tertiary": "#fff8f7", "surface-tint": "#2de500", "background": "#131313", "primary": "#eeffe2", "surface-container-low": "#1c1b1b"}, "borderRadius": {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"}, "spacing": {"space-md": "0.5rem", "space-xs": "0.125rem", "gutter": "0.5rem", "margin": "1rem", "space-lg": "1rem", "space-xl": "1.5rem", "space-sm": "0.25rem"}, "fontFamily": {"label-lg": ["JetBrains Mono"], "headline-lg": ["VT323"], "headline-xl": ["VT323"], "body-md": ["JetBrains Mono"], "body-lg": ["JetBrains Mono"], "body-sm": ["JetBrains Mono"], "headline-md": ["VT323"], "label-md": ["JetBrains Mono"]}, "fontSize": {"label-lg": ["12px", {"lineHeight": "1.2", "fontWeight": "700"}], "headline-lg": ["36px", {"lineHeight": "1.1", "letterSpacing": "0.05em", "fontWeight": "400"}], "headline-xl": ["48px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "400"}], "body-md": ["13px", {"lineHeight": "1.4", "fontWeight": "400"}], "body-lg": ["15px", {"lineHeight": "1.5", "fontWeight": "500"}], "body-sm": ["11px", {"lineHeight": "1.4", "fontWeight": "400"}], "headline-md": ["24px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "400"}], "label-md": ["10px", {"lineHeight": "1.2", "fontWeight": "700"}]}}}};</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..900&family=VT323:wght@100..900&display=swap" rel="stylesheet"/></head><body class="bg-surface font-body text-primary relative"><div class="crt-scanline fixed inset-0 z-50 pointer-events-none"></div><header class="fixed top-0 left-0 right-0 h-12 bg-surface-container-low border-b border-[#1f521f] z-40 flex items-center justify-between px-4"><div class="flex items-center gap-4"><span class="font-headline text-headline-md text-primary tracking-wider">[EPISTEMICOPS]</span><nav class="flex items-center gap-space-md" data-active-classes="bg-primary text-on-primary font-bold"><a aria-current="page" class="px-2 py-1 border border-transparent hover:border-primary transition-none bg-primary text-on-primary font-bold" data-path="terminal-deck" href="#">[DECK]</a><a class="px-2 py-1 text-xs text-on-surface-variant hover:text-primary border border-transparent hover:border-primary transition-none" data-path="telemetry-stream" href="#">[STREAM]</a><a class="px-2 py-1 text-xs text-on-surface-variant hover:text-primary border border-transparent hover:border-primary transition-none" data-path="circuit-breaker" href="#">[BREAKER]</a></nav></div><div class="flex items-center gap-4"><div class="flex items-center gap-1 text-xs"><span class="text-outline">MODE:</span><button class="px-2 py-0.5 bg-primary text-on-primary font-bold text-[10px]">LIVE</button><button class="px-2 py-0.5 bg-surface-container border border-outline text-outline text-[10px]">BASE</button><button class="px-2 py-0.5 bg-surface-container border border-outline text-outline text-[10px]">DEMO</button></div><div class="h-4 w-[1px] bg-outline"></div><div class="flex items-center gap-2 text-xs"><span class="inline-block w-2 h-2 rounded-full bg-primary-fixed animate-pulse"></span><span class="text-primary font-bold">SYS_OK</span></div><div class="w-8 h-8 rounded-none border border-primary bg-primary/10 flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[18px]">person</span></div></div></header><main class="relative pt-12 min-h-screen bg-surface p-space-gutter"><div class="flex flex-col w-full text-primary font-body pb-12">
+<!-- Top Telemetry & Status Bar -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-space-gutter">
+<div class="bg-surface-container-low border border-[#1f521f] p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-label-lg font-label-lg text-primary">BACKEND: OK</span>
+</div>
+<span class="text-xs text-outline">12ms latency</span>
+</div>
+<div class="bg-surface-container-low border border-[#1f521f] p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-label-lg font-label-lg text-primary">HINDSIGHT: OK</span>
+</div>
+<span class="text-xs text-outline">v4.8.2-rev9</span>
+</div>
+<div class="bg-surface-container-low border border-[#1f521f] p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+<span class="text-label-lg font-label-lg text-secondary-container">LLM: READY</span>
+</div>
+<span class="text-xs text-outline">gpt-4o-mini</span>
+</div>
+<div class="bg-surface-container-low border border-[#1f521f] p-3 flex items-center justify-between">
+<span class="text-xs text-outline">ACTIVE_OPERATOR:</span>
+<span class="text-label-lg font-label-lg text-primary">root@epistemic-01</span>
+</div>
+</div>
+<!-- Main Tmux-style Multi-Pane Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Pane: Incident Queue (3 cols) -->
+<div class="lg:col-span-3 bg-surface-container-low border border-[#1f521f] flex flex-col h-[700px]">
+<div class="bg-surface-container p-2 border-b border-[#1f521f] flex items-center justify-between">
+<span class="text-label-lg font-label-lg text-primary">[INCIDENT QUEUE: 5]</span>
+<span class="text-xs text-on-surface-variant bg-surface px-1.5 py-0.5 border border-[#1f521f]">LIVE_POLL</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 space-y-2">
+<!-- Incident Item 1 -->
+<div class="incident-card p-2 bg-surface-container border border-[#1f521f] hover:border-primary cursor-pointer transition-none group" onclick="selectIncident('INC-001')">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-primary">INC-001</span>
+<span class="text-[10px] bg-error-container text-on-error-container px-1 font-bold">CRIT</span>
+</div>
+<div class="text-body-sm text-on-surface-variant group-hover:text-primary truncate">DATABASE CONNECTION POOL EXHAUSTED</div>
+<div class="text-[10px] text-outline mt-1">us-east-1 • 4m ago</div>
+</div>
+<!-- Incident Item 2 (Active Selected) -->
+<div class="incident-card p-2 bg-primary/10 border border-primary p-2 cursor-pointer transition-none" id="card-INC-004" onclick="selectIncident('INC-004')">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-primary">INC-004</span>
+<span class="text-[10px] bg-error-container text-on-error-container px-1 font-bold animate-pulse">CRIT</span>
+</div>
+<div class="text-body-sm text-primary font-bold truncate">DEPLOYMENT ROLLOUT NOT PROGRESSING</div>
+<div class="text-[10px] text-primary-fixed mt-1">eu-west-1 • 12m ago • ACTIVE</div>
+</div>
+<!-- Incident Item 3 -->
+<div class="incident-card p-2 bg-surface-container border border-[#1f521f] hover:border-primary cursor-pointer transition-none group" onclick="selectIncident('INC-005')">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-primary">INC-005</span>
+<span class="text-[10px] bg-secondary-container text-on-secondary-container px-1 font-bold">WARN</span>
+</div>
+<div class="text-body-sm text-on-surface-variant group-hover:text-primary truncate">HIGH MEMORY USAGE IN INGRESS-NGINX</div>
+<div class="text-[10px] text-outline mt-1">ap-southeast-1 • 28m ago</div>
+</div>
+<!-- Incident Item 4 -->
+<div class="incident-card p-2 bg-surface-container border border-[#1f521f] hover:border-primary cursor-pointer transition-none group" onclick="selectIncident('INC-008')">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-primary">INC-008</span>
+<span class="text-[10px] bg-surface border border-outline text-outline px-1">INFO</span>
+</div>
+<div class="text-body-sm text-on-surface-variant group-hover:text-primary truncate">CERTIFICATE EXPIRY WARNING (3 DAYS)</div>
+<div class="text-[10px] text-outline mt-1">global • 1h ago</div>
+</div>
+<!-- Incident Item 5 -->
+<div class="incident-card p-2 bg-surface-container border border-[#1f521f] hover:border-primary cursor-pointer transition-none group" onclick="selectIncident('INC-012')">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-primary">INC-012</span>
+<span class="text-[10px] bg-error-container text-on-error-container px-1 font-bold">CRIT</span>
+</div>
+<div class="text-body-sm text-on-surface-variant group-hover:text-primary truncate">REDIS REPLICATION LAG SPIKE</div>
+<div class="text-[10px] text-outline mt-1">us-west-2 • 2h ago</div>
+</div>
+</div>
+<div class="p-2 border-t border-[#1f521f] bg-surface-container flex items-center justify-between text-xs text-outline">
+<span>FILTER: ALL</span>
+<span>[+] NEW RULE</span>
+</div>
+</div>
+<!-- Center Pane: Incident Details & Investigation Evidence (6 cols) -->
+<div class="lg:col-span-6 bg-surface-container-low border border-[#1f521f] flex flex-col h-[700px]">
+<!-- Header Info -->
+<div class="bg-surface-container p-3 border-b border-[#1f521f] flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-headline text-headline-md text-primary tracking-wide">[INC-004] DEPLOYMENT ROLLOUT NOT PROGRESSING</span>
+<button class="px-3 py-1 bg-primary text-on-primary font-bold text-xs hover:bg-primary-fixed transition-none" onclick="triggerInvestigation()">RUN INVESTIGATION</button>
+</div>
+<div class="flex items-center gap-4 text-xs text-outline">
+<span>NAMESPACE: <strong class="text-primary">production-core</strong></span>
+<span>CLUSTER: <strong class="text-primary">k8s-eu-01</strong></span>
+<span>DURATION: <strong class="text-secondary-container">14m 22s</strong></span>
+</div>
+</div>
+<!-- Investigation Timeline Summary -->
+<div class="p-3 border-b border-[#1f521f] bg-surface-container-lowest font-body text-xs space-y-1">
+<div class="text-outline uppercase text-[10px]">Investigation Timeline Stream:</div>
+<div class="flex items-center gap-2 text-primary">
+<span class="text-outline">22:42:18</span>
+<span class="bg-primary/20 text-primary px-1">[OK]</span>
+<span>memory.recall -- found similar incident INC-002 resolved via patch</span>
+</div>
+<div class="flex items-center gap-2 text-primary">
+<span class="text-outline">22:42:19</span>
+<span class="bg-primary/20 text-primary px-1">[OK]</span>
+<span>get_logs -- retrieved 1,420 lines from Pod frontend-deployment-7b99</span>
+</div>
+<div class="flex items-center gap-2 text-secondary-container">
+<span class="text-outline">22:42:21</span>
+<span class="bg-secondary-container/20 text-secondary-container px-1">[WARN]</span>
+<span>image_pull -- Registry timeout connecting to registry.internal.net</span>
+</div>
+</div>
+<!-- Evidence Tabs Navigation -->
+<div class="flex items-center border-b border-[#1f521f] bg-surface-container">
+<button class="px-4 py-2 text-xs font-bold bg-primary text-on-primary border-r border-[#1f521f]" id="btn-logs" onclick="switchTab('logs')">LOGS</button>
+<button class="px-4 py-2 text-xs text-on-surface-variant hover:text-primary border-r border-[#1f521f]" id="btn-metrics" onclick="switchTab('metrics')">METRICS</button>
+<button class="px-4 py-2 text-xs text-on-surface-variant hover:text-primary border-r border-[#1f521f]" id="btn-traces" onclick="switchTab('traces')">TRACES</button>
+<button class="px-4 py-2 text-xs text-on-surface-variant hover:text-primary" id="btn-pods" onclick="switchTab('pods')">PODS</button>
+</div>
+<!-- Evidence Tab Contents -->
+<div class="flex-1 overflow-y-auto p-3 bg-[#0a0a0a] font-body text-xs">
+<!-- LOGS VIEW -->
+<div class="space-y-1 text-primary/90" id="tab-logs">
+<div class="text-outline">[INFO] 2023-10-24T22:42:10.102Z Initializing container rollout...</div>
+<div class="text-outline">[INFO] 2023-10-24T22:42:11.450Z Pulling image registry.internal.net/core/frontend:v2.4.1</div>
+<div class="text-secondary-container">[WARN] 2023-10-24T22:42:15.890Z Failed to pull image: context deadline exceeded</div>
+<div class="text-error">[-] 2023-10-24T22:42:18.120Z ErrImagePull: rpc error: code = Unknown desc = failed to pull and unpack image</div>
+<div class="text-error">[-] 2023-10-24T22:42:18.121Z ImagePullBackOff: Back-off pulling image "registry.internal.net/core/frontend:v2.4.1"</div>
+<div class="text-primary/50">... [AUTO-SCROLL ENABLED] waiting for reconciliation loop ...</div>
+</div>
+<!-- METRICS VIEW (Hidden by default) -->
+<div class="hidden space-y-3" id="tab-metrics">
+<div class="flex justify-between items-center text-xs text-outline">
+<span>CPU_UTILIZATION_CLUSTER</span>
+<span class="text-primary">88.4% PEAK</span>
+</div>
+<div class="w-full bg-surface-container h-4 border border-[#1f521f] relative overflow-hidden">
+<div class="bg-primary h-full w-[88%]" style="box-shadow: 0 0 10px currentColor;"></div>
+</div>
+<div class="flex justify-between items-center text-xs text-outline">
+<span>MEMORY_PRESSURE</span>
+<span class="text-secondary-container">64.2%</span>
+</div>
+<div class="w-full bg-surface-container h-4 border border-[#1f521f] relative overflow-hidden">
+<div class="bg-secondary-container h-full w-[64%]"></div>
+</div>
+<div class="flex justify-between items-center text-xs text-outline">
+<span>NETWORK_THROUGHPUT</span>
+<span class="text-primary">1.2 GB/s</span>
+</div>
+<div class="w-full bg-surface-container h-4 border border-[#1f521f] relative overflow-hidden">
+<div class="bg-primary-fixed-dim h-full w-[45%]"></div>
+</div>
+</div>
+<!-- TRACES VIEW (Hidden by default) -->
+<div class="hidden space-y-2" id="tab-traces">
+<div class="p-2 bg-surface-container border border-[#1f521f] flex justify-between items-center">
+<span>GET /api/v1/checkout [SPAN #102]</span>
+<span class="text-error">1204ms (TIMEOUT)</span>
+</div>
+<div class="p-2 bg-surface-container border border-[#1f521f] flex justify-between items-center ml-4">
+<span>-> POST /auth/verify [SPAN #103]</span>
+<span class="text-primary">45ms</span>
+</div>
+<div class="p-2 bg-surface-container border border-[#1f521f] flex justify-between items-center ml-4">
+<span>-> DB Query: fetchUserCart [SPAN #104]</span>
+<span class="text-error">1150ms (BLOCKING)</span>
+</div>
+</div>
+<!-- PODS VIEW (Hidden by default) -->
+<div class="hidden space-y-2" id="tab-pods">
+<div class="grid grid-cols-4 gap-2 text-outline text-[10px] pb-1 border-b border-[#1f521f]">
+<span>POD NAME</span>
+<span>STATUS</span>
+<span>RESTARTS</span>
+<span>NODE</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-xs py-1 border-b border-[#1f521f]/40">
+<span class="text-primary">frontend-7b99-xyz</span>
+<span class="text-error">ImagePullBackOff</span>
+<span>12</span>
+<span class="text-outline">worker-01</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-xs py-1 border-b border-[#1f521f]/40">
+<span class="text-primary">frontend-7b99-abc</span>
+<span class="text-error">ImagePullBackOff</span>
+<span>12</span>
+<span class="text-outline">worker-02</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Pane: Hindsight Memory Panel (3 cols) -->
+<div class="lg:col-span-3 bg-surface-container-low border border-[#1f521f] flex flex-col h-[700px]">
+<div class="bg-surface-container p-2 border-b border-[#1f521f] flex items-center justify-between">
+<span class="text-label-lg font-label-lg text-primary">[HINDSIGHT MEMORY]</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+</div>
+<div class="flex-1 overflow-y-auto p-3 space-y-3 font-body text-xs">
+<!-- Status Box -->
+<div class="p-2 bg-surface-container border border-[#1f521f] space-y-1">
+<div class="flex justify-between"><span class="text-outline">STATUS:</span><span class="text-primary font-bold">ENABLED</span></div>
+<div class="flex justify-between"><span class="text-outline">MEMORY BANK:</span><span class="text-primary">REACHABLE</span></div>
+<div class="flex justify-between"><span class="text-outline">INDEX SIZE:</span><span class="text-on-surface-variant">42.8 GB</span></div>
+</div>
+<!-- Recalled Knowledge Card -->
+<div class="p-2 bg-surface-container border border-primary space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">MEM-001 (SIMILAR INCIDENT)</span>
+<span class="text-[10px] bg-primary/20 text-primary px-1">94% MATCH</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Registry timeout caused by expired cert rotation on internal mirror proxy. Fixed via manual CA certificate update.</p>
+</div>
+<!-- Runbook Status -->
+<div class="p-2 bg-surface-container border border-[#1f521f] space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-bold text-secondary-container">RUNBOOK: READY</span>
+<span class="text-[10px] text-outline">AUTO-EXEC</span>
+</div>
+<div class="text-[11px] text-on-surface-variant">RB-REGISTRY-FAILOVER v2.1 loaded and primed for execution.</div>
+<button class="w-full py-1 bg-surface border border-secondary-container text-secondary-container hover:bg-secondary-container hover:text-on-secondary font-bold text-center transition-none" onclick="executeRunbook()">EXECUTE RUNBOOK</button>
+</div>
+<!-- Learning & Postmortem State -->
+<div class="p-2 bg-surface-container border border-[#1f521f] space-y-1">
+<div class="text-outline text-[10px]">LEARNING STATE:</div>
+<div class="text-primary text-[11px]">Drafting postmortem template... Root cause isolated to proxy timeout. Vector embedding updated in vector DB.</div>
+</div>
+</div>
+<div class="p-2 border-t border-[#1f521f] bg-surface-container flex items-center justify-between text-xs text-outline">
+<span>STORE: EMBEDDED</span>
+<span class="text-primary">SYNC_OK</span>
+</div>
+</div>
+</div>
+<!-- Bottom Drawer / Recent Runs -->
+<div class="mt-space-gutter bg-surface-container-low border border-[#1f521f] p-3 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<span class="text-label-lg font-label-lg text-primary">[RECENT RUNS]</span>
+<div class="flex items-center gap-2 text-xs font-mono">
+<span class="text-outline">#92632111</span>
+<span class="bg-primary/20 text-primary px-1">LIVE</span>
+<span class="text-on-surface-variant">MEM:ON</span>
+<span class="bg-primary text-on-primary font-bold px-1">PASS</span>
+<span class="text-outline">69.1s</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 bg-surface border border-outline text-outline hover:border-primary hover:text-primary text-xs transition-none" onclick="runComparison()">COMPARISON TOOLS</button>
+<button class="px-3 py-1 bg-surface border border-outline text-outline hover:border-primary hover:text-primary text-xs transition-none" onclick="exportLogs()">EXPORT ARTIFACTS</button>
+<span class="text-xs text-primary animate-pulse ml-2">● SYSTEM READY</span>
+</div>
+</div>
+<!-- Client-side Interactive Script -->
+<script>
+    function switchTab(tabName) {
+      ['logs', 'metrics', 'traces', 'pods'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        const btn = document.getElementById('btn-' + t);
+        if (t === tabName) {
+          el.classList.remove('hidden');
+          btn.className = "px-4 py-2 text-xs font-bold bg-primary text-on-primary border-r border-[#1f521f]";
+        } else {
+          el.classList.add('hidden');
+          btn.className = "px-4 py-2 text-xs text-on-surface-variant hover:text-primary border-r border-[#1f521f]";
+        }
+      });
+    }
+
+    function selectIncident(incId) {
+      document.querySelectorAll('.incident-card').forEach(card => {
+        card.className = "incident-card p-2 bg-surface-container border border-[#1f521f] hover:border-primary cursor-pointer transition-none group";
+      });
+      const selected = document.getElementById('card-' + incId) || event.currentTarget;
+      selected.className = "incident-card p-2 bg-primary/10 border border-primary p-2 cursor-pointer transition-none";
+      alert("Switched context to incident: " + incId);
+    }
+
+    function triggerInvestigation() {
+      alert("Initiating autonomous Hindsight investigation loop for INC-004...");
+    }
+
+    function executeRunbook() {
+      if(confirm("Are you sure you want to execute RB-REGISTRY-FAILOVER against production-core?")) {
+        alert("Runbook dispatched successfully. Monitoring rollout status...");
+      }
+    }
+
+    function runComparison() {
+      alert("Opening baseline comparison modal...");
+    }
+
+    function exportLogs() {
+      alert("Exporting diagnostic artifacts and memory vector bundle to secure store...");
+    }
+  </script>
+</div></main></body></html>

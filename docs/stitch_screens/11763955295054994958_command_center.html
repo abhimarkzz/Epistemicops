@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface": "#FBF9F5", "soft-surface": "#E9E3D8", "surface-bright": "#fff8f7", "surface-container-highest": "#eedfe0", "error": "#ba1a1a", "on-tertiary-fixed-variant": "#095223", "surface-variant": "#eedfe0", "on-secondary-fixed-variant": "#793014", "background": "#fff8f7", "tertiary": "#003b16", "primary-container": "#7a3040", "primary-fixed-dim": "#ffb2bd", "on-tertiary": "#ffffff", "oxblood": "#7A3040", "on-primary": "#ffffff", "canvas": "#F4F0E8", "surface-dim": "#e6d6d7", "on-primary-fixed-variant": "#772e3e", "primary-fixed": "#ffd9de", "copper": "#B77A52", "outline-variant": "#d9c1c3", "dusty-plum": "#7B6678", "on-surface-variant": "#534245", "secondary-text": "#6E675F", "warm-teal": "#4E7773", "tertiary-container": "#0c5425", "secondary-fixed": "#ffdbd0", "on-secondary-container": "#782e13", "surface-container": "#faeaeb", "primary": "#5d1a2a", "warning": "#B56A28", "info": "#4F6F82", "surface-container-high": "#f4e5e5", "on-primary-container": "#ff9cac", "error-container": "#ffdad6", "on-tertiary-fixed": "#002109", "on-primary-fixed": "#3e0214", "success": "#4F7557", "on-background": "#211a1b", "terracotta": "#C66A4A", "secondary-fixed-dim": "#ffb59c", "on-surface": "#211a1b", "primary-text": "#2B2723", "surface-tint": "#954555", "tertiary-fixed": "#adf3b4", "on-secondary": "#ffffff", "secondary-container": "#ff9875", "inverse-on-surface": "#fdedee", "hindsight-memory": "#80627C", "on-error-container": "#93000a", "tertiary-fixed-dim": "#91d699", "on-secondary-fixed": "#390c00", "on-tertiary-container": "#83c78c", "on-error": "#ffffff", "secondary": "#984629", "outline": "#867274", "surface-container-lowest": "#ffffff", "surface-container-low": "#fff0f1", "critical": "#A83B3B", "sage": "#6B775E", "inverse-primary": "#ffb2bd", "inverse-surface": "#372e2f", "border": "#D4CCBF", "muted-text": "#91897F" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "2rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "space-md": "1rem", "gutter": "1.5rem", "space-lg": "1.5rem" }, "fontFamily": { "headline-sm": ["Inter"], "code-sm": ["JetBrains Mono"], "body-sm": ["Inter"], "body-md": ["Inter"], "headline-lg": ["Inter"], "code-md": ["JetBrains Mono"], "label-md": ["JetBrains Mono"], "body-lg": ["Inter"], "headline-md": ["Inter"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "code-sm": ["11px", { "lineHeight": "14px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }], "code-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }] } } } }</script><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/></head><body class="bg-canvas font-body-md text-on-surface"><header class="fixed top-0 left-0 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex items-center justify-between px-6"><div class="flex items-center gap-6"><span class="font-headline-sm text-oxbold tracking-wider">EPISTEMICOPS</span><div class="flex items-center bg-soft-surface p-1 rounded-lg gap-1"><button class="px-3 py-1 text-code-sm uppercase rounded bg-primary text-on-primary">LIVE</button><button class="px-3 py-1 text-code-sm uppercase rounded text-secondary-text hover:text-on-surface">BASELINE</button><button class="px-3 py-1 text-code-sm uppercase rounded text-secondary-text hover:text-on-surface">DEMO</button></div></div><div class="flex items-center gap-6"><div class="flex items-center gap-4 text-code-sm text-secondary-text"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-success"></span>Backend</span><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-success"></span>Hindsight</span><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-warning"></span>LLM</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-72 bg-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex flex-col"><div class="p-4 border-b border-border flex items-center justify-between"><span class="font-headline-sm text-on-surface">Incident Queue</span><span class="material-symbols-outlined text-muted-text">filter_list</span></div><nav class="flex-1 overflow-y-auto p-3 space-y-1" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex flex-col p-3 rounded-lg transition-colors bg-primary-container text-on-primary-container font-semibold" data-path="incident-command" href="#"><div class="flex justify-between items-center mb-1"><span class="text-code-sm font-semibold text-oxbold">INC-4092</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-mono">CRITICAL</span></div><span class="text-body-sm text-secondary-text truncate">Memory Leak in US-East Ingress Gateway</span></a><a class="flex flex-col p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="incident-queue" href="#"><div class="flex justify-between items-center mb-1"><span class="text-code-sm font-semibold">INC-4091</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/20 text-warning font-mono">WARNING</span></div><span class="text-body-sm text-secondary-text truncate">Latency Spike in Auth Service</span></a></nav></aside><div class="pl-72 pr-80 pt-16 min-h-screen flex flex-col"><main class="flex-1 bg-canvas p-6"><div class="flex flex-col w-full pb-16">
+<!-- Top Hero Bar / Incident Banner -->
+<div class="w-full bg-surface p-6 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-1 rounded bg-error-container text-on-error-container text-code-sm font-bold">INC-001</span>
+<span class="px-2.5 py-1 rounded bg-error/10 text-error text-code-sm font-bold uppercase tracking-wider">Critical</span>
+<span class="text-code-sm text-secondary-text">Detected 14:02:19 UTC</span>
+</div>
+<h1 class="text-headline-lg text-on-surface">Database connection pool exhausted — order-processing-api</h1>
+<p class="text-body-md text-secondary-text max-w-2xl">Service is failing health checks due to unreleased connections from upstream gRPC workers. Automated fallback engaged.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-3 rounded-lg bg-soft-surface text-on-surface text-label-md hover:bg-border transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">history</span>
+        View History
+      </button>
+<button class="px-6 py-3 rounded-lg bg-terracotta text-on-primary text-label-md hover:opacity-90 transition-opacity shadow-md flex items-center gap-2" onclick="triggerInvestigation()">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+        RUN INVESTIGATION
+      </button>
+</div>
+</div>
+<!-- Main Grid Layout: Center View + Right Hindsight Panel -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+<!-- Left/Center 2-Column Span for Epistemic Graph, Timeline, and Evidence -->
+<div class="xl:col-span-2 flex flex-col gap-8">
+<!-- Epistemic Graph Section -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col relative overflow-hidden">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-oxbold">hub</span>
+<h3 class="text-headline-sm text-on-surface">Epistemic Graph Topology</h3>
+</div>
+<div class="flex items-center gap-2 bg-soft-surface p-1 rounded-lg text-code-sm">
+<button class="px-3 py-1 rounded bg-surface text-on-surface shadow-xs">3D View</button>
+<button class="px-3 py-1 rounded text-secondary-text hover:text-on-surface">Matrix</button>
+<button class="px-3 py-1 rounded text-secondary-text hover:text-on-surface">Trace</button>
+</div>
+</div>
+<!-- Interactive 3D Topology Canvas Simulation -->
+<div class="relative w-full h-[380px] bg-canvas rounded-lg overflow-hidden flex items-center justify-center border border-border/40" id="graph-container">
+<!-- Background Grid Pattern -->
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(#2B2723_1px,transparent_1px)] [background-size:24px_24px]"></div>
+<!-- Graph Nodes & Connections (Simulated via SVG and Absolute Elements) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<line stroke="#D4CCBF" stroke-dasharray="4" stroke-width="2" x1="25%" x2="50%" y1="50%" y2="30%"></line>
+<line stroke="#C66A4A" stroke-width="3" x1="50%" x2="75%" y1="30%" y2="50%"></line>
+<line stroke="#A83B3B" stroke-width="3" x1="50%" x2="50%" y1="30%" y2="75%"></line>
+<line stroke="#D4CCBF" stroke-width="2" x1="25%" x2="50%" y1="50%" y2="75%"></line>
+</svg>
+<!-- Node 1: Service -->
+<div class="absolute left-[20%] top-[45%] transform -translate-x-1/2 -translate-y-1/2 bg-surface p-4 rounded-xl shadow-md border border-border flex flex-col items-center gap-1 cursor-pointer hover:scale-105 transition-transform" onclick="selectNode('order-processing-api')">
+<div class="w-10 h-10 rounded-lg bg-terracotta/10 text-terracotta flex items-center justify-center">
+<span class="material-symbols-outlined">dns</span>
+</div>
+<span class="text-code-sm font-bold text-on-surface">order-processing-api</span>
+<span class="text-[10px] text-secondary-text">Service Node</span>
+</div>
+<!-- Node 2: Database (Critical) -->
+<div class="absolute left-[50%] top-[70%] transform -translate-x-1/2 -translate-y-1/2 bg-surface p-4 rounded-xl shadow-lg border-2 border-critical flex flex-col items-center gap-1 cursor-pointer hover:scale-105 transition-transform animate-pulse" onclick="selectNode('rds-postgres-core')">
+<div class="w-10 h-10 rounded-lg bg-critical/10 text-critical flex items-center justify-center">
+<span class="material-symbols-outlined">database</span>
+</div>
+<span class="text-code-sm font-bold text-critical">rds-postgres-core</span>
+<span class="text-[10px] text-error font-mono">POOL EXHAUSTED</span>
+</div>
+<!-- Node 3: Memory Node -->
+<div class="absolute left-[50%] top-[25%] transform -translate-x-1/2 -translate-y-1/2 bg-surface p-4 rounded-xl shadow-md border border-hindsight-memory/40 flex flex-col items-center gap-1 cursor-pointer hover:scale-105 transition-transform" onclick="selectNode('memory-3812')">
+<div class="w-10 h-10 rounded-lg bg-hindsight-memory/10 text-hindsight-memory flex items-center justify-center">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<span class="text-code-sm font-bold text-hindsight-memory">Hindsight #3812</span>
+<span class="text-[10px] text-secondary-text">94% Vector Match</span>
+</div>
+<!-- Node 4: Root Cause -->
+<div class="absolute left-[75%] top-[45%] transform -translate-x-1/2 -translate-y-1/2 bg-surface p-4 rounded-xl shadow-md border border-warning flex flex-col items-center gap-1 cursor-pointer hover:scale-105 transition-transform" onclick="selectNode('grpc-worker')">
+<div class="w-10 h-10 rounded-lg bg-warning/10 text-warning flex items-center justify-center">
+<span class="material-symbols-outlined">hub</span>
+</div>
+<span class="text-code-sm font-bold text-on-surface">grpc-worker-pool</span>
+<span class="text-[10px] text-warning">Root Cause Vector</span>
+</div>
+<!-- Graph Controls Floating Overlay -->
+<div class="absolute bottom-4 right-4 flex items-center gap-2 bg-surface/90 backdrop-blur-md p-1.5 rounded-lg shadow-sm border border-border">
+<button class="p-2 rounded hover:bg-soft-surface text-secondary-text hover:text-on-surface" title="Zoom In"><span class="material-symbols-outlined text-[18px]">add</span></button>
+<button class="p-2 rounded hover:bg-soft-surface text-secondary-text hover:text-on-surface" title="Zoom Out"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+<button class="p-2 rounded hover:bg-soft-surface text-secondary-text hover:text-on-surface" title="Reset Camera"><span class="material-symbols-outlined text-[18px]">center_focus_strong</span></button>
+</div>
+</div>
+<!-- Graph Legend -->
+<div class="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t border-border/40 text-code-sm text-secondary-text">
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-terracotta"></span><span>Service (#C66A4A)</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-hindsight-memory"></span><span>Memory (#80627C)</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-critical"></span><span>Critical (#A83B3B)</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sage"></span><span>Healthy (#6B775E)</span></div>
+</div>
+</div>
+<!-- Investigation Timeline -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-oxbold">timeline</span>
+<h3 class="text-headline-sm text-on-surface">Agent Investigation Timeline</h3>
+</div>
+<span class="text-code-sm text-success flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-success animate-ping"></span> Live Execution</span>
+</div>
+<div class="space-y-6 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-border">
+<div class="flex items-start gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-success text-on-primary flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-4 rounded-xl border border-border/40">
+<div class="flex justify-between items-center mb-1">
+<span class="text-code-sm font-bold text-on-surface">Incident Loaded & Context Parsed</span>
+<span class="text-code-sm text-secondary-text">14:02:19 UTC</span>
+</div>
+<p class="text-body-sm text-secondary-text">Telemetry ingested from US-East gateway cluster. Payload signatures matched against historical failure taxonomy.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-success text-on-primary flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-4 rounded-xl border border-border/40">
+<div class="flex justify-between items-center mb-1">
+<span class="text-code-sm font-bold text-on-surface">Service Diagnostic Active</span>
+<span class="text-code-sm text-secondary-text">14:02:22 UTC</span>
+</div>
+<p class="text-body-sm text-secondary-text">Container probes verified 100% saturation on connection pool max_connections=200.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-hindsight-memory text-on-primary flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-4 rounded-xl border border-border/40">
+<div class="flex justify-between items-center mb-1">
+<span class="text-code-sm font-bold text-hindsight-memory">Hindsight Memory Recalled</span>
+<span class="text-code-sm text-secondary-text">14:02:28 UTC</span>
+</div>
+<p class="text-body-sm text-secondary-text">Retrieved resolution vector from INC-012 (Q3 post-mortem). Recommended immediate circuit breaker adjustment.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 z-10 animate-pulse">
+<span class="material-symbols-outlined text-[16px]">search</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-4 rounded-xl border border-border/40">
+<div class="flex justify-between items-center mb-1">
+<span class="text-code-sm font-bold text-oxbold">Logs Inspected & Stack Trace Isolated</span>
+<span class="text-code-sm text-secondary-text">14:02:35 UTC</span>
+</div>
+<p class="text-body-sm text-secondary-text">Scanning pod stdout for leaked handles in gRPC interceptor middleware...</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Evidence Section with Tabs -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col">
+<div class="flex items-center justify-between mb-6 border-b border-border/40 pb-4">
+<div class="flex items-center gap-6">
+<button class="text-headline-sm text-oxbold pb-1 border-b-2 border-oxbold transition-all" id="tab-logs" onclick="switchTab('logs')">Logs Stream</button>
+<button class="text-headline-sm text-secondary-text hover:text-on-surface pb-1 transition-all" id="tab-metrics" onclick="switchTab('metrics')">Metrics</button>
+<button class="text-headline-sm text-secondary-text hover:text-on-surface pb-1 transition-all" id="tab-traces" onclick="switchTab('traces')">Traces</button>
+<button class="text-headline-sm text-secondary-text hover:text-on-surface pb-1 transition-all" id="tab-pods" onclick="switchTab('pods')">Pods</button>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span class="text-code-sm text-secondary-text">Tail -f active</span>
+</div>
+</div>
+<!-- Logs View Content -->
+<div class="bg-[#1A1818] p-4 rounded-lg font-mono text-code-sm text-[#E9E3D8] h-64 overflow-y-auto space-y-1.5 shadow-inner" id="content-logs">
+<div class="flex gap-3"><span class="text-muted-text">14:02:15</span><span class="text-warning">[WARN]</span><span>connection pool reached max limit (200/200) for target database rds-postgres-core</span></div>
+<div class="flex gap-3"><span class="text-muted-text">14:02:16</span><span class="text-error">[ERROR]</span><span>pq: tenant order-processing-api failed to acquire connection within 3000ms timeout</span></div>
+<div class="flex gap-3"><span class="text-muted-text">14:02:18</span><span class="text-error">[CRIT]</span><span>gRPC worker thread pool exhausted at /app/workers/order_processor.go:142</span></div>
+<div class="flex gap-3"><span class="text-muted-text">14:02:19</span><span class="text-hindsight-memory">[HINDSIGHT]</span><span>Auto-triggering remediation pattern #3812: flushing idle gRPC channels</span></div>
+<div class="flex gap-3"><span class="text-muted-text">14:02:21</span><span class="text-success">[INFO]</span><span>circuit breaker state transitioned to HALF-OPEN for 15s inspection window</span></div>
+<div class="flex gap-3 animate-pulse"><span class="text-muted-text">14:02:22</span><span class="text-muted-text">[DEBUG]</span><span>awaiting downstream acknowledgment from primary database replica...</span></div>
+</div>
+<!-- Metrics View Content (Hidden by default) -->
+<div class="hidden h-64 flex flex-col justify-between" id="content-metrics">
+<div class="flex justify-between items-center mb-2">
+<span class="text-code-sm font-bold text-secondary-text">Connection Pool Saturation (%) over last 60m</span>
+<span class="text-code-sm text-error font-mono">Current: 100%</span>
+</div>
+<!-- Clean SVG Sparkline Chart -->
+<div class="w-full h-44 flex items-end">
+<svg class="w-full h-full overflow-visible" viewbox="0 0 600 150">
+<path d="M 0 120 Q 100 110, 200 90 T 400 40 T 600 10" fill="none" stroke="#A83B3B" stroke-width="3"></path>
+<path d="M 0 120 Q 100 110, 200 90 T 400 40 T 600 10 L 600 150 L 0 150 Z" fill="url(#grad)" opacity="0.1"></path>
+<defs>
+<lineargradient id="grad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#A83B3B"></stop>
+<stop offset="100%" stop-color="transparent"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+<!-- Traces View Content -->
+<div class="hidden h-64 overflow-y-auto space-y-3" id="content-traces">
+<div class="p-3 bg-surface-container-low rounded-lg border border-border/40 flex justify-between items-center">
+<div class="flex flex-col gap-1">
+<span class="text-code-sm font-bold text-on-surface">POST /v2/orders/checkout</span>
+<span class="text-body-sm text-secondary-text">Trace ID: 8f9a2b1c4e - Duration: 3420ms (Timeout)</span>
+</div>
+<span class="px-2 py-1 rounded bg-error-container text-on-error-container text-code-sm">504 Gateway</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg border border-border/40 flex justify-between items-center">
+<div class="flex flex-col gap-1">
+<span class="text-code-sm font-bold text-on-surface">gRPC OrderStream.Commit</span>
+<span class="text-body-sm text-secondary-text">Trace ID: 8f9a2b1c5f - Duration: 3001ms</span>
+</div>
+<span class="px-2 py-1 rounded bg-warning/20 text-warning text-code-sm">Pool Wait</span>
+</div>
+</div>
+<!-- Pods View Content -->
+<div class="hidden h-64 overflow-y-auto grid grid-cols-2 gap-4" id="content-pods">
+<div class="p-4 bg-surface-container-low rounded-lg border border-border/40 flex flex-col justify-between">
+<div class="flex justify-between items-center">
+<span class="text-code-sm font-bold text-on-surface">order-proc-7859b-x92z</span>
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+</div>
+<div class="text-body-sm text-secondary-text mt-2">Restarts: 4 | CPU: 88% | Mem: 1.4GB</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg border border-border/40 flex flex-col justify-between">
+<div class="flex justify-between items-center">
+<span class="text-code-sm font-bold text-on-surface">order-proc-7859b-m48q</span>
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+</div>
+<div class="text-body-sm text-secondary-text mt-2">Restarts: 3 | CPU: 92% | Mem: 1.6GB</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar Column: Hindsight Memory & Runbook -->
+<div class="flex flex-col gap-8">
+<!-- Hindsight Memory Panel -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col border border-hindsight-memory/20">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2 text-hindsight-memory">
+<span class="material-symbols-outlined">psychology</span>
+<h3 class="text-headline-sm text-on-surface">Hindsight Memory</h3>
+</div>
+<span class="px-2 py-0.5 rounded bg-hindsight-memory/10 text-hindsight-memory text-code-sm font-bold">2 Recalled</span>
+</div>
+<p class="text-body-sm text-secondary-text mb-6">Autonomous memory engine retrieved 2 relevant operational memories from previous incidents in this subsystem.</p>
+<div class="space-y-4">
+<div class="p-4 rounded-xl bg-surface-container-low border border-border/40 flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-code-sm font-bold text-hindsight-memory">INC-012 (Q3 Post-Mortem)</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-hindsight-memory/10 text-hindsight-memory font-mono">94% Match</span>
+</div>
+<p class="text-body-sm text-secondary-text">Identified identical connection leak caused by unbuffered gRPC stream retries. Resolved via max_lifetime reduction.</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-border/40 flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-code-sm font-bold text-hindsight-memory">INC-008 (Auth Gateway Spike)</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-hindsight-memory/10 text-hindsight-memory font-mono">82% Match</span>
+</div>
+<p class="text-body-sm text-secondary-text">Upstream pool timeout tuning guidelines successfully applied to US-East infrastructure.</p>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-border/40 flex items-center justify-between text-code-sm text-secondary-text">
+<span>Knowledge Graph Links</span>
+<span class="text-oxbold font-bold cursor-pointer hover:underline">Explore Constellation →</span>
+</div>
+</div>
+<!-- Microservice Resolution Runbook -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-oxbold">menu_book</span>
+<h3 class="text-headline-sm text-on-surface">Resolution Runbook</h3>
+</div>
+<span class="px-2 py-0.5 rounded bg-success/10 text-success text-code-sm font-bold">Ready</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low">
+<input checked="" class="mt-1 accent-oxbold" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-body-sm font-semibold text-on-surface line-through">Drain idle connections on pool proxy</span>
+<span class="text-[11px] text-secondary-text">Executed automatically via agent 14:02:21</span>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low">
+<input class="mt-1 accent-oxbold" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-body-sm font-semibold text-on-surface">Scale replica pods from 2 to 6</span>
+<span class="text-[11px] text-secondary-text">Pending manual approval or policy trigger</span>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low">
+<input class="mt-1 accent-oxbold" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-body-sm font-semibold text-on-surface">Purge Redis cache layer for order keys</span>
+<span class="text-[11px] text-secondary-text">Optional fallback procedure</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-3 rounded-lg bg-primary text-on-primary text-label-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+          Execute Selected Runbook Steps
+        </button>
+</div>
+<!-- Postmortem Retention & Learning Status -->
+<div class="w-full bg-surface rounded-xl shadow-sm p-6 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="text-code-sm text-secondary-text">Learning Pipeline Status</span>
+<span class="text-code-sm text-success font-mono">ACTIVE (v4.2)</span>
+</div>
+<p class="text-body-sm text-secondary-text">Postmortem auto-generation is armed. Resolution actions taken during INC-001 will be synthesized into Hindsight vector memory upon closure.</p>
+<div class="w-full bg-soft-surface h-2 rounded-full overflow-hidden">
+<div class="bg-oxbold h-full w-3/4 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side script for interactive tabs and investigation trigger -->
+<script>
+    function switchTab(tabName) {
+      ['logs', 'metrics', 'traces', 'pods'].forEach(t => {
+        document.getElementById('content-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).className = "text-headline-sm text-secondary-text hover:text-on-surface pb-1 transition-all border-b-2 border-transparent";
+      });
+      document.getElementById('content-' + tabName).classList.remove('hidden');
+      document.getElementById('tab-' + tabName).className = "text-headline-sm text-oxbold pb-1 border-b-2 border-oxbold transition-all";
+    }
+
+    function triggerInvestigation() {
+      alert("EpistemicOps Autonomous Agent initiated deep diagnostic sweep across US-East ingress.");
+    }
+
+    function selectNode(nodeId) {
+      console.log("Selected node:", nodeId);
+    }
+  </script>
+</div></main></div><aside class="fixed right-0 top-16 bottom-0 w-80 bg-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex flex-col"><div class="p-4 border-b border-border flex items-center justify-between"><span class="font-headline-sm text-on-surface">Hindsight Memory</span><span class="material-symbols-outlined text-hindsight-memory">psychology</span></div><div class="flex-1 overflow-y-auto p-4 space-y-4"><div class="p-3 rounded-xl bg-surface-container-low border border-border"><div class="flex items-center gap-2 mb-2 text-hindsight-memory"><span class="material-symbols-outlined text-[16px]">history</span><span class="text-code-sm font-bold">Similar Incident #3812</span></div><p class="text-body-sm text-secondary-text">Matched 94% vector similarity with ingress buffer overflow from Q3 post-mortem.</p></div></div></aside></body></html>

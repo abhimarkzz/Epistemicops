@@ -1,218 +1,196 @@
-# EpistemicOps — Architecture
+# EpistemOps Architecture Specification
 
-## Overview
-
-EpistemicOps is a browser-based SRE incident-response agent that investigates infrastructure incidents, produces root-cause diagnoses, and builds persistent procedural memory using [Hindsight](https://github.com/vectorize-io/hindsight) so future similar incidents can benefit from prior knowledge.
+This document provides a comprehensive technical overview of the EpistemicOps architecture, including state machine orchestration, memory lifecycle, evidence collection, and security isolation.
 
 ---
 
-## System Diagram
+## 1. System Architecture
 
-```
-┌───────────────────────────┐         SSE stream           ┌──────────────────────────────┐
-│   React + Vite + Three.js │ ◄──────────────────────────► │      FastAPI Backend         │
-│   localhost:5173 (dev)    │    REST /api/*                │      localhost:8000          │
-│                           │                               │                              │
-│  • 3D Epistemic Graph     │                               │  ┌─────────────────────────┐ │
-│  • Incident queue         │                               │  │    LangGraph Agent       │ │
-│  • Live event timeline    │                               │  │    (bounded DAG)         │ │
-│  • Runbook panel          │                               │  │                           │ │
-│  • Approval workflow      │                               │  │  load_incident            │ │
-│  • Run comparison table   │                               │  │  → query_memory           │ │
-│  • Baseline/Demo toggle   │                               │  │  → investigate            │ │
-└───────────────────────────┘                               │  │  → analyze (LLM)          │ │
-                                                            │  │  → validate               │ │
-                                                            │  │  → produce_result         │ │
-                                                            │  │  → retain_postmortem      │ │
-                                                            │  └──────────┬──────────────┘ │
-                                                            │             │                 │
-                                                            │  ┌──────────▼──────────────┐ │
-                                                            │  │   MemoryService          │ │
-                                                            │  │   (Hindsight client)     │ │
-                                                            │  └──────────┬──────────────┘ │
-                                                            │             │                 │
-                                                            │  ┌──────────▼──────────────┐ │
-                                                            │  │   FixtureService         │ │
-                                                            │  │   data/incidents/*.json  │ │
-                                                            │  │   (read-only evidence)   │ │
-                                                            │  └──────────────────────────┘ │
-                                                            └──────────────┬───────────────┘
-                                                                           │
-                         ┌─────────────────────────────────────────────────┼──────────────────┐
-                         │                                                 │                  │
-              ┌──────────▼──────────┐                          ┌──────────▼──────────┐       │
-              │   LLM Provider      │                          │  Hindsight (Docker)  │       │
-              │                     │                          │  localhost:8888      │       │
-              │  Gemini 3.8 Flash   │                          │  localhost:9999 (UI) │       │
-              │  — OR —             │                          │                      │       │
-              │  Groq (free tier)   │                          │  • Memory bank       │       │
-              │                     │                          │  • Mental model      │       │
-              └─────────────────────┘                          │  • Embedded pg0 DB   │       │
-                                                               └──────────────────────┘       │
-                                                                                              │
-                                                            ┌─────────────────────────────────┘
-                                                            │  Keyword Evaluator (eval.py)
-                                                            │  Deterministic, no AI judge
-                                                            │  Runs post-diagnosis against
-                                                            │  hidden ground truth
-                                                            └─────────────────────────────────
-```
+EpistemicOps is structured into three cooperating tiers:
+1. **Frontend Presentation Layer (React 18 + Vite + Three.js):** Browser-based 3D Command Center rendering the real-time epistemic graph, live SSE investigation trace, runbook mental model state, and run comparison metrics.
+2. **Backend Application Layer (FastAPI + LangGraph):** Orchestrates the investigation state machine, executes read-only telemetry tools against sanitized fixtures, queries LLM providers, and tracks run metrics.
+3. **Memory Subsystem (Vectorize Hindsight v0.10.1):** High-performance vector memory bank storing structured postmortems, providing semantic vector recall, and maintaining an evolving SRE runbook backed by Neon Serverless PostgreSQL with `pgvector` (or local embedded `pg0`).
 
----
+```mermaid
+flowchart TB
+    subgraph Client["Client Browser (Port 5173 / Production Web Service)"]
+        UI["React 18 Command Center"]
+        WebGL["Three.js Epistemic Graph Scene"]
+        RunbookPanel["Runbook & Memory Governance Panel"]
+        ComparePanel["Cold vs Warm Run Comparator"]
+    end
 
-## Component Map
+    subgraph BackendAPI["Backend Service (FastAPI :8000)"]
+        Router["FastAPI Application Core"]
+        SSEHub["Server-Sent Events (SSE) Broadcaster"]
+        RunStore["In-Memory Run Store & Comparator"]
+        Evaluator["Deterministic Keyword Evaluator"]
+    end
 
-| Component | Path | Role |
-|---|---|---|
-| **Frontend** | `frontend/src/App.tsx` | React SPA: incident queue, 3D scene, live timeline, runbook panel, comparison table |
-| **3D Graph** | `frontend/src/components/three/EpistemicGraph.tsx` | WebGL topology scene with 2D fallback |
-| **API Client** | `frontend/src/api.ts` | Typed fetch wrappers for backend REST + SSE |
-| **Types** | `frontend/src/types.ts` | Shared TypeScript interfaces |
-| **Backend Entry** | `backend/app/main.py` | FastAPI app: SSE investigate endpoint, memory/run/approval routes |
-| **Agent Graph** | `backend/app/agent/graph.py` | LangGraph `StateGraph` with 7 nodes + error handler |
-| **Agent Prompts** | `backend/app/agent/prompts.py` | System prompt and analysis prompt builder |
-| **Agent Tools** | `backend/app/agent/tools.py` | Read-only evidence tools (logs, metrics, trace, pod status) |
-| **Agent Memory** | `backend/app/agent/memory.py` | Delegation layer: agent → MemoryService |
-| **Agent Types** | `backend/app/agent/types.py` | `AgentState`, `AgentEvent`, `DiagnosisResult` |
-| **MemoryService** | `backend/app/memory/service.py` | Hindsight API wrapper: retain, recall, runbook, bank management |
-| **Memory Schemas** | `backend/app/memory/schemas.py` | Pydantic models: `PostmortemRecord`, `RunbookStatus`, `MemoryStatus` |
-| **Evaluator** | `backend/app/eval.py` | Keyword-based scoring against hidden ground truth |
-| **Run Store** | `backend/app/runs.py` | In-memory run records with comparison |
-| **Fixtures** | `backend/app/fixtures.py` | Read-only incident loader; ground truth never exposed to agent |
-| **Config** | `backend/app/config.py` | `Settings` via pydantic-settings (.env) |
-| **Incident Data** | `data/incidents/*.json` | 5 synthetic incident fixtures |
-| **Demo Events** | `data/demo_events/*.json` | Pre-recorded SSE streams (inc-003, inc-004) |
-| **Approval State** | `data/memory_state.json` | Local JSON store for postmortem approval status |
-| **Docker Compose** | `docker-compose.yml` | Hindsight container definition |
-| **Dockerfile** | `Dockerfile` | Multi-stage production build |
-| **Start Script** | `start.sh` | Production entrypoint (Hindsight + FastAPI) |
-| **Init Script** | `scripts/init_hindsight.py` | Bank and mental model creation |
+    subgraph AgentStateMachine["LangGraph Investigation State Machine"]
+        LoadNode["load_incident"]
+        MemoryNode["query_memory"]
+        InvestigateNode["investigate"]
+        AnalyzeNode["analyze"]
+        ValidateNode["validate"]
+        ProduceNode["produce_result"]
+        RetainNode["retain_postmortem"]
+    end
 
----
+    subgraph TelemetryLayer["Telemetry & Fixture Engine"]
+        FixtureSvc["FixtureService (Sanitization & Isolation)"]
+        Tools["InvestigationTools (get_logs, get_metrics, get_trace, get_pod_status)"]
+        FixturesData[("data/incidents/*.json")]
+    end
 
-## Agent DAG (LangGraph StateGraph)
+    subgraph InferenceLayer["LLM Provider Tier"]
+        Groq["Groq API (openai/gpt-oss-120b - Free Tier)"]
+        Gemini["Google Gemini (gemini-3.8-flash - Optional)"]
+    end
 
-```
-load_incident
-      │
-      ▼
-query_memory ──── (baseline mode: skip, emit memory_skipped)
-      │
-      ▼
-investigate ──── calls 4 tools in order: get_logs, get_metrics, get_trace, get_pod_status
-      │
-      ▼
-analyze ──── single LLM call (Gemini or Groq), JSON response
-      │
-      ▼
-validate ──── parse and validate LLM JSON output
-      │
-      ▼
-produce_result ──── emit diagnosis_completed event
-      │
-      ▼
-retain_postmortem ──── retain structured postmortem in Hindsight
-      │
-      ▼
-     END
-```
+    subgraph MemoryTier["Hindsight Vector Memory Daemon (:8888)"]
+        HindsightAPI["Hindsight Core API v0.10.1"]
+        ONNXEmbed["In-Process ONNX Embeddings (multilingual-e5-small)"]
+        RRFRank["Reciprocal Rank Fusion (RRF)"]
+        MentalModel["Microservice Resolution Runbook"]
+        PostgresDB[("Neon PostgreSQL + pgvector (or embedded pg0)")]
+        ApprovalStore[("Local Approval Store (data/memory_state.json)")]
+    end
 
-Any node that sets `state["error"]` routes to `error_end → END`.
+    UI <-->|REST API| Router
+    UI <-->|SSE Stream /api/investigate| SSEHub
+    UI --- WebGL
+    UI --- RunbookPanel
+    UI --- ComparePanel
 
-The graph is a bounded acyclic DAG. `max_agent_steps` (default: 8) is a safety recursion limit.
+    Router --> AgentStateMachine
+    SSEHub -.->|Stream AgentEvent| UI
 
----
+    LoadNode --> MemoryNode
+    MemoryNode --> InvestigateNode
+    InvestigateNode --> AnalyzeNode
+    AnalyzeNode --> ValidateNode
+    ValidateNode --> ProduceNode
+    ProduceNode --> RetainNode
 
-## Memory Flow
+    MemoryNode <-->|client.arecall| HindsightAPI
+    RetainNode -->|client.aretain| HindsightAPI
 
-### Retain (after diagnosis)
+    InvestigateNode --> Tools
+    Tools --> FixtureSvc
+    FixtureSvc --> FixturesData
 
-1. `_node_retain_postmortem` builds a structured postmortem text (no raw logs)
-2. Calls `MemoryService.retain_incident()` → `client.aretain()` (async, non-blocking)
-3. Hindsight extracts facts and stores memories in the `epistemic-sre` bank
-4. A `PostmortemRecord` is saved to `data/memory_state.json` with `approval_status: pending`
+    AnalyzeNode <--> InferenceLayer
 
-### Consolidation (Hindsight-managed)
+    HindsightAPI --> ONNXEmbed
+    HindsightAPI --> RRFRank
+    HindsightAPI <--> MentalModel
+    HindsightAPI <--> PostgresDB
+    Router <--> ApprovalStore
 
-1. Human approves the postmortem in the UI (or via API)
-2. Hindsight consolidates approved memories into the "Microservice Resolution Runbook" mental model
-3. Consolidation runs asynchronously; `trigger.mode = "delta"` enables incremental updates
-4. The runbook content is a synthesis of all retained incident patterns
+    Router --> RunStore
+    Router --> Evaluator
 
-### Recall (before investigation)
-
-1. `_node_query_memory` builds a semantic query from incident service, category, and alert title
-2. Calls `MemoryService.query_memory()` → `client.arecall()` (vector search, no LLM)
-3. Top-3 results are formatted and injected into `memory_context`
-4. The analysis prompt includes prior patterns under `--- PRIOR INCIDENT PATTERNS (from memory) ---`
-
-### Baseline Mode
-
-1. `skip_memory=True` causes `_node_query_memory` to emit `memory_skipped` and set `memory_context = None`
-2. The LLM never sees prior patterns — it reasons from raw evidence only
-3. This enables cold/warm comparison via the run comparison endpoint
-
----
-
-## Data Flow
-
-### Investigation Request
-
-```
-Browser → POST /api/investigate/{incident_id}?baseline=false
-       ← SSE event stream
-          run_started
-          incident_started
-          memory_query_started
-          memory_result (found: true/false)
-          tool_started (×4)
-          tool_result_summary (×4)
-          diagnosis_started
-          diagnosis_completed
-          memory_retention_started
-          postmortem_created
-          run_completed
-```
-
-### Run Comparison
-
-```
-Browser → POST /api/runs/compare { run_id_a, run_id_b }
-       ← { run_a, run_b, delta: { elapsed_ms, tool_calls, eval_pass, evidence_score } }
+    classDef client fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#e2e8f0;
+    classDef agent fill:#1e1b4b,stroke:#818cf8,stroke-width:1px,color:#e2e8f0;
+    classDef mem fill:#311042,stroke:#c084fc,stroke-width:1px,color:#e2e8f0;
+    classDef tool fill:#064e3b,stroke:#34d399,stroke-width:1px,color:#e2e8f0;
+    class UI,WebGL,RunbookPanel,ComparePanel client;
+    class Router,SSEHub,RunStore,Evaluator,LoadNode,MemoryNode,InvestigateNode,AnalyzeNode,ValidateNode,ProduceNode,RetainNode,InferenceLayer agent;
+    class HindsightAPI,ONNXEmbed,RRFRank,MentalModel,PostgresDB,ApprovalStore mem;
+    class FixtureSvc,Tools,FixturesData tool;
 ```
 
 ---
 
-## Ports
+## 2. Memory Lifecycle (Cold → Retain → Consolidate → Warm)
 
-| Service | Port | Scope |
-|---|---|---|
-| Frontend (dev) | 5173 | localhost |
-| Backend (FastAPI) | 8000 | localhost |
-| Hindsight REST API | 8888 | localhost |
-| Hindsight Web UI | 9999 | localhost |
-| Production (Dockerfile) | 7860 | public |
+The core purpose of EpistemicOps is demonstrating how persistent operational memory overcomes the amnesia of stateless AI agents.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Engineer as SRE Engineer
+    participant UI as Command Center UI
+    participant Agent as LangGraph Agent
+    participant Tools as Investigation Tools
+    participant LLM as LLM Provider (Groq)
+    participant Hindsight as Hindsight Memory (:8888)
+    participant Runbook as Mental Model (Runbook)
+
+    Note over Engineer,Runbook: Phase 1: Cold Run (Incident inc-001)
+    Engineer->>UI: Select inc-001 & Run (Live Mode)
+    UI->>Agent: POST /api/investigate/inc-001
+    Agent->>Hindsight: query_incident_patterns() via arecall()
+    Hindsight-->>Agent: Memory Result: found=false (no prior memories)
+    Agent->>Tools: Fetch logs, metrics, trace, pod status
+    Tools-->>Agent: Raw telemetry evidence
+    Agent->>LLM: Analyze telemetry & diagnose root cause
+    LLM-->>Agent: Diagnosis: DB Pool Exhaustion due to unindexed query
+    Agent->>UI: Emit diagnosis_completed via SSE
+    Agent->>Hindsight: retain_incident_full() via aretain()
+    Hindsight-->>Agent: Postmortem queued for retention (document_id=inc-001)
+
+    Note over Engineer,Runbook: Phase 2: Consolidation & Governance
+    Engineer->>UI: Review postmortem & click "Approve"
+    UI->>Hindsight: POST /api/memory/runbook/refresh
+    Hindsight->>Runbook: Consolidate postmortem into Microservice Resolution Runbook
+
+    Note over Engineer,Runbook: Phase 3: Warm Run (Incident inc-003 - Related Outage)
+    Engineer->>UI: Select inc-003 & Run (Live Mode)
+    UI->>Agent: POST /api/investigate/inc-003
+    Agent->>Hindsight: query_incident_patterns() via arecall()
+    Hindsight-->>Agent: Memory Result: found=true (recalled inc-001 postmortem)
+    Agent->>UI: Emit memory_result (found=true, memory_used=true)
+    Agent->>Tools: Fetch telemetry for inc-003
+    Tools-->>Agent: Telemetry evidence
+    Agent->>LLM: Analyze telemetry + Recalled Postmortem Context
+    LLM-->>Agent: Targeted Diagnosis referencing prior known resolution
+    Agent->>UI: Emit diagnosis_completed (memory_used=true)
+
+    Note over Engineer,Runbook: Phase 4: Baseline Comparison
+    Engineer->>UI: Click "Compare last 2"
+    UI->>UI: Render side-by-side Cold vs Warm run comparison metrics
+```
 
 ---
 
-## LLM Provider Selection
+## 3. LangGraph Bounded State Machine
+
+The diagnostic agent is implemented as an acyclic `StateGraph` in `backend/app/agent/graph.py`. Unlike unbounded cyclic agents that can loop indefinitely, EpistemicOps enforces deterministic termination:
 
 ```
-if LLM_PROVIDER is explicitly "gemini" or "groq" → use that
-elif GROQ_API_KEY is set → use Groq
-else → use Gemini
+load_incident ──(ok)──> query_memory ──> investigate ──(ok)──> analyze ──(ok)──> validate ──(ok)──> produce_result ──> retain_postmortem ──> END
+      │                                       │                     │                    │
+   (error)                                 (error)               (error)              (error)
+      └───────────────────────────────────────┴─────────────────────┴────────────────────┴───────────────────────────> error_end ──> END
 ```
 
-Both providers use `temperature=0` for deterministic output.
+### Safety Bounds
+- **Acyclic Execution:** The graph transitions strictly forward; there are no feedback loops that can stall or consume unbounded tokens.
+- **Defensive Recursion Limit:** LangGraph's `recursion_limit` is set to `settings.max_agent_steps` (default 8). If the 7-node DAG ever encounters an unexpected recursion anomaly, `GraphRecursionError` is caught and surfaced as a clean `run_failed` SSE event.
+- **LLM Call Timeout:** `asyncio.wait_for` wraps LLM inference with `settings.llm_timeout` (default 60s) to prevent thread hangs during upstream provider disruptions.
 
 ---
 
-## Safety Constraints
+## 4. Telemetry Sanitization & Ground-Truth Isolation
 
-- **No shell execution**: The agent has no `exec`, `kubectl`, or filesystem mutation tools
-- **No automated remediation**: Recommended actions are advisory only
-- **Read-only evidence**: All tools read from static JSON fixtures, never from live infrastructure
-- **Ground truth isolation**: `FixtureService` never exposes `_ground_truth` to agent-facing methods
-- **Concurrency control**: `max_concurrent_investigations` semaphore (default: 2)
-- **Timeout**: `llm_timeout` (default: 60s) prevents hung LLM calls
-- **Step limit**: `max_agent_steps` (default: 8) caps LangGraph recursion
+EpistemicOps enforces strict boundaries to guarantee that benchmark scoring is fair and that the agent never "cheats":
+
+1. **Hidden Ground Truth:** Fixture JSON files (`data/incidents/*.json`) include a `_ground_truth` object containing root cause categories, expected evidence tokens, canonical fix commands, and forbidden categories.
+2. **Sanitization Filter:** `FixtureService` validates and strips all keys matching `HIDDEN_GT_FIELDS` (`_ground_truth`, `ground_truth`, `root_cause`, `root_cause_category`, `expected_evidence`, `canonical_fix`, `fix_tool`, `forbidden_categories`, `resolution_steps`) before the telemetry payload is handed to the agent or frontend.
+3. **Automated Leak Guard:** `_node_load_incident` asserts that zero ground-truth keys exist in the loaded incident dictionary. If any leaked key is detected, the run aborts immediately with a failure event.
+4. **Post-Run Evaluation:** Only after `produce_result` has yielded the final diagnosis does the evaluator (`app.eval.evaluate_diagnosis`) inspect the diagnosis against the ground truth to compute evidence overlap and category accuracy.
+
+---
+
+## 5. Network & Port Allocation
+
+| Service | Port | Protocol | Scope | Role |
+|---|---|---|---|---|
+| Frontend Dev Server | 5173 | HTTP | Localhost | Vite development server with API proxy |
+| FastAPI Application | 8000 | HTTP / SSE | 127.0.0.1 / Public | REST API, SSE event streaming, production SPA static host |
+| Hindsight API Daemon | 8888 | HTTP | 127.0.0.1 (Loopback) | Vector recall, postmortem retention, mental model management |
+| Neon PostgreSQL | 5432 | TCP (TLS) | External Cloud | Managed serverless pgvector database |
+
+In production container deployments, internal services bind strictly to `127.0.0.1`, exposing only the single public application port (default `8000`).

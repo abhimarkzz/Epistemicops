@@ -1,172 +1,192 @@
-# EpistemicOps — Deployment Guide
+# EpistemicOps Production Deployment Guide & Operations Manual
 
-## Local Development (Recommended for Demo)
+This document details the production deployment architecture for EpistemicOps, covering the zero-credit-card container deployment (Render + Neon Serverless PostgreSQL) as well as self-hosted Linux container/systemd deployments.
 
-### Requirements
+---
 
-| Dependency | Minimum | Purpose |
+## 1. Architecture
+
+In production, EpistemicOps packages both the React 18 single-page application (SPA) and the FastAPI backend into a single unified container. Hindsight runs in-process or as an internal daemon on the loopback interface (`127.0.0.1:8888`), storing vector embeddings in Neon Serverless PostgreSQL with `pgvector`.
+
+```
+                  Public Internet (User Browser)
+                               │
+               HTTPS (https://epistemicops.onrender.com)
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │        Render Web Service / Docker Host      │
+        │        • Single Exposed Port ($PORT, 8000)   │
+        │        • Container Non-Root User (UID 1000)  │
+        │                                              │
+        │   ┌──────────────────────────────────────┐   │
+        │   │ FastAPI Web Application (:8000)      │   │
+        │   │  • Serves React 18 + Three.js Bundle │   │
+        │   │  • Handles REST & Streams SSE Events │   │
+        │   │  • LangGraph Bounded SRE Agent       │   │
+        │   └───────────────┬──────────────────────┘   │
+        │                   │                          │
+        │   ┌───────────────▼──────────────────────┐   │
+        │   │ Native Hindsight Daemon (:8888)      │   │
+        │   │  • Local In-Process ONNX Embeddings  │   │
+        │   │    (intfloat/multilingual-e5-small)  │   │
+        │   │  • Reciprocal Rank Fusion (RRF)      │   │
+        │   │  • Bound strictly to 127.0.0.1       │   │
+        │   └───────────────┬──────────────────────┘   │
+        └───────────────────┼──────────────────────────┘
+                            │ Encrypted TLS (Port 5432)
+                            ▼
+        ┌──────────────────────────────────────────────┐
+        │     Neon Serverless PostgreSQL (Cloud)       │
+        │     • pgvector extension enabled             │
+        │     • 384-dimension vector schema            │
+        │     • Preserves postmortems across restarts  │
+        └──────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Prerequisites
+
+- **Git & GitHub Account** (for repository hosting and webhook deployments)
+- **Groq API Key:** Free tier account at [console.groq.com](https://console.groq.com)
+- **Neon PostgreSQL Account:** Free serverless database at [neon.tech](https://neon.tech)
+- **Docker 24+** (if building or running containers locally)
+- **Render Account** (or any standard Docker container platform such as Railway, Fly.io, or an Ubuntu VM)
+
+---
+
+## 3. Environment Variables
+
+Store all credentials in the hosting platform's secure environment settings (or `backend/.env` for local hosting). Never check secrets into Git:
+
+| Variable | Recommended Production Value | Description |
 |---|---|---|
-| Docker Desktop | 24+ | Runs Hindsight |
-| Python | 3.11+ | Backend |
-| Node.js | 20+ | Frontend |
-| Gemini API key or Groq API key | — | LLM inference |
-
-### Start Hindsight (from project root)
-
-```bash
-# Set your LLM key for Hindsight consolidation:
-export GROQ_API_KEY=your-key-here
-# Or: export GEMINI_API_KEY=your-key-here
-
-docker compose up -d
-docker compose ps   # verify "hindsight" is Up
-```
-
-### Start Backend (from `backend/`)
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp ../. env.example .env        # Then edit .env with your API key
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Verify: `curl http://localhost:8000/health`
-
-### Start Frontend (from `frontend/`)
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open http://localhost:5173
+| `PORT` | `8000` | Application HTTP port assigned by host. |
+| `LLM_PROVIDER` | `groq` | Agent LLM provider (`groq` or `gemini`). |
+| `GROQ_API_KEY` | `gsk_...` | Production Groq API key for agent inference. |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Model identifier for diagnostic reasoning. |
+| `HINDSIGHT_PORT` | `8888` | Loopback port for native Hindsight daemon. |
+| `HINDSIGHT_BASE_URL` | `http://127.0.0.1:8888` | Internal loopback URL used by FastAPI. |
+| `HINDSIGHT_BANK_ID` | `epistemic-sre` | Isolated memory bank ID. |
+| `HINDSIGHT_MENTAL_MODEL_ID` | `microservice-resolution-runbook` | ID of the operational resolution runbook. |
+| `HINDSIGHT_API_EMBEDDINGS_PROVIDER` | `onnx` | Uses local ONNX embeddings without external API costs. |
+| `HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID` | `intfloat/multilingual-e5-small` | Pre-cached 384-dimension ONNX embedding model. |
+| `HINDSIGHT_API_RERANKER_PROVIDER` | `rrf` | Reciprocal rank fusion reranker (zero memory overhead). |
+| `HINDSIGHT_API_DATABASE_URL` | `postgresql://...@...neon.tech/neondb?sslmode=require` | Neon PostgreSQL connection string with `pgvector`. |
+| `ALLOW_PUBLIC_RESET` | `false` | Disables unauthenticated memory wipes on public instances. |
+| `ADMIN_TOKEN` | *(generate random 32-char string)* | Bearer token required for `DELETE /api/memory/bank`. |
+| `MAX_CONCURRENT_INVESTIGATIONS` | `2` | Concurrency limiter preventing resource exhaustion. |
 
 ---
 
-## Production Deployment: Render (Free Tier, $0)
+## 4. Build Process
 
-### Architecture
+The project uses a production multi-stage `Dockerfile`:
 
-The Dockerfile bundles Hindsight + FastAPI + pre-built frontend into a single container.
+1. **Stage 1 (Frontend Builder):**
+   - Node 20 Alpine environment installs npm dependencies via `npm ci`.
+   - Runs `npm run build` (`tsc && vite build`) to generate optimized static chunks in `frontend/dist/`.
+2. **Stage 2 (Runtime Python Environment):**
+   - Python 3.11 Slim installs system packages (`curl`, `build-essential`, `libpq-dev`).
+   - Creates a dedicated non-root user `user` (UID 1000).
+   - Installs backend requirements and `hindsight-api-slim[embedded-db,local-onnx]==0.10.1`.
+   - Pre-downloads the ONNX model and tokenizer from HuggingFace Hub during image construction to eliminate cold-start download pauses.
+   - Copies compiled frontend assets from Stage 1 into `/app/frontend/dist/`.
 
-- Hindsight runs as an embedded process (not Docker-in-Docker)
-- ONNX embeddings (local, no external embedding API)
-- RRF reranker (local, no external reranker API)
-- Neon PostgreSQL for persistent memory (survives container restarts)
-- Groq free tier for LLM inference
-
-### Steps
-
-1. **Create a free Neon database** at [neon.tech](https://neon.tech/)
-   - Run: `CREATE EXTENSION IF NOT EXISTS vector;`
-   - Copy the connection string
-
-2. **Create a free Web Service** on [render.com](https://render.com/)
-   - Connect your GitHub repository
-   - Environment: **Docker**
-
-3. **Set environment variables** on Render:
-
-   | Variable | Value |
-   |---|---|
-   | `PORT` | `8000` |
-   | `GROQ_API_KEY` | Your Groq key |
-   | `HINDSIGHT_API_DATABASE_URL` | Your Neon connection string |
-   | `HINDSIGHT_API_EMBEDDINGS_PROVIDER` | `onnx` |
-   | `HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID` | `intfloat/multilingual-e5-small` |
-   | `HINDSIGHT_API_RERANKER_PROVIDER` | `rrf` |
-   | `CORS_ORIGIN` | Your Render public URL |
-   | `ALLOW_PUBLIC_RESET` | `false` |
-   | `ADMIN_TOKEN` | A secure random token |
-
-4. **Deploy** — Render builds and launches automatically with free HTTPS.
-
-### Free Tier Limitations
-
-- Render free web services sleep after 15 minutes of inactivity
-- First request after sleep takes ~45–60 seconds (cold start)
-- Neon free tier has a 0.5 GiB storage limit
-- Groq free tier has rate limits (varies by model)
-
----
-
-## Self-Hosted Linux Server (OCI / Any Ubuntu)
-
-See [deploy/README.md](../deploy/README.md) for the full guide using:
-
-- Oracle Cloud Always Free VM (or any Ubuntu 22.04/24.04 LTS)
-- Native Hindsight binary (not Docker)
-- Systemd service units
-- Nginx or Caddy reverse proxy with Let's Encrypt HTTPS
-
-### Quick Start
-
+To build locally:
 ```bash
-git clone https://github.com/abhimarkzz/Epistemicops.git
-cd Epistemicops
-sudo bash deploy/setup-server.sh
+docker build -t epistemicops:latest .
 ```
 
 ---
 
-## Environment Variables Reference
+## 5. Startup Sequence (`start.sh`)
 
-### Backend (`backend/.env`)
+When the container starts, `/app/start.sh` executes the following orchestration:
 
-| Variable | Default | Description |
-|---|---|---|
-| `LLM_PROVIDER` | *(auto)* | `gemini` or `groq` |
-| `GEMINI_API_KEY` | — | Gemini API key (backend only) |
-| `GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model |
-| `GROQ_API_KEY` | — | Groq API key (backend only) |
-| `GROQ_MODEL` | `openai/gpt-oss-120b` | Groq model |
-| `HINDSIGHT_BASE_URL` | `http://127.0.0.1:8888` | Hindsight API URL |
-| `HINDSIGHT_BANK_ID` | `epistemic-sre` | Memory bank name |
-| `HINDSIGHT_MENTAL_MODEL_ID` | `microservice-resolution-runbook` | Runbook model ID |
-| `BACKEND_HOST` | `127.0.0.1` | Uvicorn bind host |
-| `BACKEND_PORT` | `8000` | Uvicorn bind port |
-| `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin |
-| `MAX_AGENT_STEPS` | `8` | LangGraph recursion limit |
-| `LLM_TIMEOUT` | `60` | LLM call timeout (seconds) |
-| `ALLOW_PUBLIC_RESET` | `true` | Allow unauthenticated memory reset |
-| `ADMIN_TOKEN` | — | Required for reset when `ALLOW_PUBLIC_RESET=false` |
-| `MAX_CONCURRENT_INVESTIGATIONS` | `2` | Concurrent investigation limit |
-
-### Hindsight (Docker Compose / Dockerfile)
-
-| Variable | Default | Description |
-|---|---|---|
-| `HINDSIGHT_LLM_PROVIDER` | `groq` | LLM for Hindsight extraction/consolidation |
-| `HINDSIGHT_LLM_MODEL` | `openai/gpt-oss-120b` | Model for Hindsight |
-| `HINDSIGHT_LLM_API_KEY` | `${GROQ_API_KEY}` | API key for Hindsight LLM |
-| `HINDSIGHT_API_DATABASE_URL` | — | External PostgreSQL (Neon) for persistence |
-
-**Never commit real API keys.** Use `.env` files (gitignored) or platform secret management.
+1. **Database Schema Verification:** Runs `python scripts/verify_db_schema.py` to ensure the Neon PostgreSQL instance has `vector` enabled and `memory_units.embedding` configured for 384 dimensions.
+2. **Launch Hindsight Daemon:** Starts `hindsight-api --port 8888` in the background with local ONNX embeddings and RRF reranking.
+3. **Health Probes:** Polls `http://127.0.0.1:8888/health/live` and `/health/ready` until Hindsight and the database connection report healthy.
+4. **Data Initialization:** Executes `python scripts/init_hindsight.py` to ensure the `epistemic-sre` memory bank and `microservice-resolution-runbook` mental model exist.
+5. **Launch Application:** Starts Uvicorn on `0.0.0.0:$PORT` to serve the FastAPI REST API, SSE endpoints, and static React SPA.
 
 ---
 
-## Health Checks
+## 6. Health Checks & Verification
 
-| Endpoint | Expected |
-|---|---|
-| `GET /health` | `{"status": "ok", "services": {"llm": ..., "hindsight": ...}}` |
-| `GET /api/incidents` | JSON array of 5 incidents |
-| `GET /api/memory/status` | Memory subsystem health snapshot |
+### Local / Internal Health Probes
+```bash
+# Backend application health
+curl -s http://127.0.0.1:8000/health | jq .
 
-Hindsight probe failures are informational — the backend returns HTTP 200 regardless.
+# Native Hindsight daemon liveness
+curl -s http://127.0.0.1:8888/health/live
+
+# Native Hindsight database readiness
+curl -s http://127.0.0.1:8888/health/ready
+```
+
+### Public Endpoint Probe
+```bash
+curl -s https://epistemicops.onrender.com/health | jq .
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "service": "epistemicops-backend",
+  "services": {
+    "llm": {
+      "provider": "groq",
+      "status": "ok",
+      "url": "https://api.groq.com (model: openai/gpt-oss-120b)"
+    },
+    "hindsight": {
+      "status": "ok",
+      "url": "http://127.0.0.1:8888"
+    }
+  }
+}
+```
 
 ---
 
-## Troubleshooting
+## 7. Logs & Observability
 
-| Symptom | Fix |
-|---|---|
-| `hindsight: unreachable` in `/health` | Start Hindsight: `docker compose up -d` |
-| `llm: unreachable` in `/health` | Set `GEMINI_API_KEY` or `GROQ_API_KEY` in `backend/.env` |
-| Runbook stays "generating" | Wait 1–3 minutes, or trigger refresh: `curl -X POST localhost:8000/api/memory/runbook/refresh` |
-| Container exits on Render | Check build logs; ensure `PORT` is set |
-| Neon connection refused | Verify `HINDSIGHT_API_DATABASE_URL` includes `?sslmode=require` |
+- **Container Logs:** Stream live logs via your container platform (e.g. `render logs` or `docker logs -f <container-id>`).
+- **Internal Hindsight Logs:** Stored in `/tmp/hindsight.log` inside the container for debugging startup sequences.
+- **Investigation Telemetry:** Real-time event streams emitted over SSE on `/api/investigate/{incident_id}`.
+
+---
+
+## 8. Secrets Management
+
+- **Zero Client Exposure:** The frontend SPA bundle (`frontend/dist/assets/*.js`) contains zero API keys or database connection strings.
+- **Backend Isolation:** `GROQ_API_KEY`, `HINDSIGHT_API_DATABASE_URL`, and `ADMIN_TOKEN` are passed exclusively via environment variables.
+- **Git Protection:** `.env` and `backend/.env` are strictly included in `.gitignore` and `.dockerignore`.
+
+---
+
+## 9. Public Deployment URL
+
+- **Production Live URL:** [https://epistemicops.onrender.com](https://epistemicops.onrender.com)
+- **Repository Source:** [https://github.com/abhimarkzz/Epistemops](https://github.com/abhimarkzz/Epistemops)
+
+---
+
+## 10. Known Free-Tier Limitations
+
+1. **Idle Spin-Down:** On Render's free tier, the web service spins down after 15 minutes of inactivity. The first subsequent request triggers a cold-start boot taking approximately 45–60 seconds.
+2. **512 MB Memory Ceiling:** The stack uses in-process ONNX embeddings with `rrf` (reciprocal rank fusion) rather than neural cross-encoders to ensure total container memory stays comfortably under 450 MB RSS.
+3. **Database Storage Quota:** Neon's free tier provides 0.5 GB of storage. Postmortems are stored as concise text summaries (~1 KB each), supporting tens of thousands of incidents without exceeding quotas.
+4. **Groq Free-Tier Rate Limits:** Heavy background consolidation can trigger tokens-per-minute limits on the free Groq tier. Vector recall operates independently of the LLM and remains unaffected.
+
+---
+
+## 11. Rollback Procedure
+
+If an update causes regressions:
+1. In the hosting dashboard (e.g. Render), navigate to **Deploys**.
+2. Select the previous successful deployment and click **Rollback**.
+3. Because operational memory resides permanently in Neon PostgreSQL, rolling back code never causes loss of stored postmortems or runbook entries.

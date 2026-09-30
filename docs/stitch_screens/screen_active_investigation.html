@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-primary-fixed-variant": "#2f2ebe",
+          "on-surface-variant": "#c7c4d7",
+          "outline-variant": "#464554",
+          "secondary": "#5de6ff",
+          "surface": "#13131b",
+          "on-tertiary-container": "#31057e",
+          "inverse-surface": "#e4e1ed",
+          "on-tertiary": "#381385",
+          "primary-fixed": "#e1e0ff",
+          "secondary-fixed": "#a2eeff",
+          "surface-dim": "#13131b",
+          "surface-container-low": "#1b1b23",
+          "on-error-container": "#ffdad6",
+          "inverse-primary": "#494bd6",
+          "background": "#13131b",
+          "tertiary-fixed-dim": "#cebdff",
+          "secondary-container": "#00cbe6",
+          "on-tertiary-fixed": "#21005e",
+          "on-background": "#e4e1ed",
+          "outline": "#908fa0",
+          "on-secondary-fixed": "#001f25",
+          "surface-container-lowest": "#0d0d15",
+          "surface-variant": "#34343d",
+          "primary": "#c0c1ff",
+          "on-tertiary-fixed-variant": "#4f319c",
+          "primary-fixed-dim": "#c0c1ff",
+          "on-error": "#690005",
+          "on-primary": "#1000a9",
+          "tertiary": "#cebdff",
+          "surface-container": "#1f1f27",
+          "tertiary-fixed": "#e8ddff",
+          "on-primary-fixed": "#07006c",
+          "primary-container": "#8083ff",
+          "inverse-on-surface": "#303038",
+          "error": "#ffb4ab",
+          "on-secondary": "#00363e",
+          "on-secondary-container": "#00515d",
+          "surface-bright": "#393841",
+          "surface-container-high": "#292932",
+          "surface-tint": "#c0c1ff",
+          "on-surface": "#e4e1ed",
+          "secondary-fixed-dim": "#2fd9f4",
+          "tertiary-container": "#9b7fed",
+          "surface-container-highest": "#34343d",
+          "on-primary-container": "#0d0096",
+          "on-secondary-fixed-variant": "#004e5a",
+          "error-container": "#93000a"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "margin": "1rem",
+          "space-sm": "0.25rem",
+          "space-xl": "1.5rem",
+          "gutter": "0.75rem",
+          "space-md": "0.5rem",
+          "space-lg": "1rem",
+          "space-xs": "0.125rem"
+        },
+        "fontFamily": {
+          "headline-sm": ["Inter"],
+          "mono-sm": ["JetBrains Mono"],
+          "headline-md": ["Inter"],
+          "body-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "headline-lg": ["Inter"],
+          "label-caps": ["JetBrains Mono"],
+          "mono-md": ["JetBrains Mono"]
+        },
+        "fontSize": {
+          "headline-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "600"}],
+          "mono-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+          "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400"}],
+          "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0", "fontWeight": "400"}],
+          "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "label-caps": ["10px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+          "mono-md": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.02em", "fontWeight": "400"}]
+        }
+      }
+    }
+  }
+</script><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/></head><body class="bg-surface font-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low z-50 flex flex-col pt-space-xl pb-space-xl"><div class="px-space-xl mb-space-xl flex items-center gap-space-md"><img alt="EpistemicOps Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApvWzfmD9aUnVs3cg65enbN-FLZIi90O78xL-ACvb0I5r2GFTVEIjlu-ONsIVobMVuA8NI3eQcDWYMCUIrKfBeeuRB0RwGQz76HLIwyeg38w_301UkKt-J3TTsMMKoocAog2ECa0ctvEfzbDYE9mWSZ-JF-bKDIMtx_ggdMJdpNBNVi8DaUY2jEtWxiRczlYUUl3SebOz3efsLosGxwyn46DtWYOaRiI5DUCCWRn31p4wM2OMirBqXEQ"/><span class="text-headline-sm font-headline-sm tracking-tight uppercase text-on-surface">EpistemicOps</span></div><nav class="flex-1 px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center justify-between px-space-lg py-space-md rounded-xl transition-all bg-primary-container text-on-primary-container font-semibold" data-path="incidents" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">crisis_alert</span><span class="font-body-md">Incidents</span></div><span class="px-space-sm py-space-xs rounded-full bg-error-container text-on-error-container font-mono-sm">5</span></a><a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="runs" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">play_arrow</span><span class="font-body-md">Runs</span></div><span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-on-surface font-mono-sm">9</span></a><a class="flex items-center justify-between px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="memory" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[18px]">neurology</span><span class="font-body-md">Memory</span></div><span class="px-space-sm py-space-xs rounded-full bg-surface-container-highest text-on-surface font-mono-sm">6</span></a><a class="flex items-center px-space-lg py-space-md rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="health" href="#"><span class="material-symbols-outlined mr-space-md text-[18px]">pulse_alert</span><span class="font-body-md">Health</span></a></nav></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container border border-outline-variant/30"><span class="material-symbols-outlined text-[16px] text-secondary">hub</span><span class="font-mono-sm text-on-surface">INC-8839: Latency Spike in US-East</span><span class="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer">arrow_drop_down</span></div><div class="flex items-center bg-surface-container rounded-lg p-space-xs border border-outline-variant/30"><button class="px-space-md py-space-xs rounded text-mono-sm bg-primary text-on-primary font-semibold">Live</button><button class="px-space-md py-space-xs rounded text-mono-sm text-on-surface-variant hover:text-on-surface">Baseline</button><button class="px-space-md py-space-xs rounded text-mono-sm text-on-surface-variant hover:text-on-surface">Demo</button></div></div><div class="flex items-center gap-space-xl"><div class="flex items-center gap-space-lg font-mono-sm text-on-surface-variant"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Backend: OK</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Hindsight: OK</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>Groq: 98ms</span></div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface">
+<div class="grid grid-cols-12 gap-space-lg p-space-xl">
+<!-- Left Column: Incident Queue (3 cols) -->
+<div class="col-span-3 flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-caps text-on-surface-variant uppercase">Active Incidents</span>
+<span class="font-mono-sm px-space-sm py-space-xs bg-surface-container-high rounded text-secondary">5 live</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- INC-004 Selected Card -->
+<div class="flex flex-col p-space-md bg-surface-container-high rounded-xl relative overflow-hidden transition-all shadow-md">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary animate-pulse"></div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-mono-sm text-secondary font-semibold">INC-004</span>
+<span class="font-mono-sm px-space-xs py-0.5 bg-error-container text-on-error-container rounded">P0</span>
+</div>
+<h4 class="font-headline-sm text-on-surface mb-space-xs">Auth Gateway Latency Spike</h4>
+<p class="font-body-sm text-on-surface-variant line-clamp-2 mb-space-md">LangGraph autonomous diagnostic agent investigating cascading timeouts in us-east-1.</p>
+<div class="flex items-center justify-between text-mono-sm text-on-surface-variant pt-space-xs">
+<span class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>Agent Active</span>
+<span class="font-mono-sm">12m ago</span>
+</div>
+</div>
+<!-- Other Incidents -->
+<div class="flex flex-col p-space-md bg-surface-container-low hover:bg-surface-container rounded-xl transition-all cursor-pointer">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-mono-sm text-on-surface-variant">INC-003</span>
+<span class="font-mono-sm px-space-xs py-0.5 bg-surface-container-highest text-on-surface rounded">P1</span>
+</div>
+<h4 class="font-headline-sm text-on-surface mb-space-xs">Redis Cluster OOM Evictions</h4>
+<span class="font-mono-sm text-on-surface-variant">Resolved 2h ago</span>
+</div>
+<div class="flex flex-col p-space-md bg-surface-container-low hover:bg-surface-container rounded-xl transition-all cursor-pointer">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-mono-sm text-on-surface-variant">INC-002</span>
+<span class="font-mono-sm px-space-xs py-0.5 bg-surface-container-highest text-on-surface rounded">P2</span>
+</div>
+<h4 class="font-headline-sm text-on-surface mb-space-xs">Cert Rotation Failure</h4>
+<span class="font-mono-sm text-on-surface-variant">Mitigated 5h ago</span>
+</div>
+</div>
+<!-- Quick Telemetry Mini-Card -->
+<div class="p-space-md bg-surface-container-lowest rounded-xl mt-space-md flex flex-col gap-space-sm">
+<span class="font-label-caps text-on-surface-variant">Cluster Health</span>
+<div class="flex items-center justify-between text-mono-sm">
+<span>Node Availability</span>
+<span class="text-secondary font-semibold">99.8%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[99.8%]"></div>
+</div>
+<div class="flex items-center justify-between text-mono-sm">
+<span>Epistemic Latency</span>
+<span class="text-on-surface">42ms</span>
+</div>
+</div>
+</div>
+<!-- Center Column: 3D Epistemic Graph & Live Stream (6 cols) -->
+<div class="col-span-6 flex flex-col gap-space-lg">
+<!-- 3D Epistemic Graph Visualizer -->
+<div class="flex flex-col bg-surface-container-low rounded-xl p-space-lg relative overflow-hidden shadow-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="font-headline-sm">LangGraph Epistemic Topological State</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-space-sm py-space-xs bg-surface-container-high rounded text-mono-sm text-secondary animate-pulse">Live Querying</span>
+</div>
+</div>
+<!-- Simulated 3D Graph Container -->
+<div class="relative w-full h-64 rounded-lg bg-surface-container-lowest overflow-hidden flex items-center justify-center">
+<!-- Background grid decoration -->
+<div class="absolute inset-0 opacity-20 bg-[radial-gradient(#5de6ff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+<!-- Graph Nodes & Connections (Simulated SVG) -->
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<line stroke="#464554" stroke-dasharray="4" stroke-width="2" x1="120" x2="260" y1="80" y2="130"></line>
+<line stroke="#5de6ff" stroke-width="2" x1="260" x2="400" y1="130" y2="70"></line>
+<line stroke="#464554" stroke-width="2" x1="260" x2="320" y1="130" y2="200"></line>
+<line stroke="#5de6ff" stroke-dasharray="4" stroke-width="2" x1="400" x2="520" y1="70" y2="150"></line>
+</svg>
+<!-- Node 1 -->
+<div class="absolute top-12 left-24 px-space-md py-space-sm bg-surface-container-high border border-outline-variant/50 rounded-xl shadow-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-primary text-[18px]">dns</span>
+<span class="font-mono-sm text-on-surface mt-1">auth-ingress-v2</span>
+<span class="text-[10px] text-secondary font-mono-sm">Healthy</span>
+</div>
+<!-- Node 2 (Active Pulsing) -->
+<div class="absolute top-24 left-1/2 -translate-x-1/2 px-space-md py-space-sm bg-surface-container-highest border border-secondary rounded-xl shadow-2xl flex flex-col items-center animate-bounce">
+<div class="absolute -inset-1 rounded-xl bg-secondary/20 animate-ping"></div>
+<span class="material-symbols-outlined text-secondary text-[18px]" style="font-variation-settings: 'FILL' 1;">neurology</span>
+<span class="font-mono-sm text-secondary font-semibold mt-1">LangGraph Agent</span>
+<span class="text-[10px] text-on-surface font-mono-sm">Verifying Deps</span>
+</div>
+<!-- Node 3 -->
+<div class="absolute top-10 right-28 px-space-md py-space-sm bg-surface-container-high border border-outline-variant/50 rounded-xl shadow-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-error text-[18px]">error</span>
+<span class="font-mono-sm text-on-surface mt-1">token-service-db</span>
+<span class="text-[10px] text-error font-mono-sm">Timeout 504</span>
+</div>
+<!-- Node 4 -->
+<div class="absolute bottom-6 right-36 px-space-md py-space-sm bg-surface-container-high border border-outline-variant/50 rounded-xl shadow-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-tertiary text-[18px]">storage</span>
+<span class="font-mono-sm text-on-surface mt-1">hindsight-vec</span>
+<span class="text-[10px] text-tertiary font-mono-sm">Querying 98ms</span>
+</div>
+</div>
+</div>
+<!-- Live Investigation SSE Stream -->
+<div class="flex flex-col bg-surface-container-low rounded-xl p-space-lg shadow-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary">terminal</span>
+<span class="font-headline-sm">Live SSE Investigation Stream</span>
+</div>
+<div class="flex items-center gap-space-sm font-mono-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span>Connected (chunked/stream)</span>
+</div>
+</div>
+<!-- Terminal Output Box -->
+<div class="bg-surface-container-lowest rounded-lg p-space-md font-mono-sm text-on-surface flex flex-col gap-space-sm max-h-56 overflow-y-auto">
+<div class="flex items-start gap-space-sm text-on-surface-variant">
+<span class="text-secondary">[14:22:01]</span>
+<span>Connecting to EpistemicOps agent core runner... OK</span>
+</div>
+<div class="flex items-start gap-space-sm text-on-surface">
+<span class="text-secondary">[14:22:03]</span>
+<span>Executing tool call: <strong class="text-primary">kubectl describe pod auth-gw-86f7-9xp4</strong></span>
+</div>
+<div class="flex items-start gap-space-sm text-on-surface-variant pl-space-lg">
+<span>-&gt; Container image tag: gcr.io/prod/auth@sha256:4a8b... ImagePullBackOff resolved.</span>
+</div>
+<div class="flex items-start gap-space-sm text-on-surface">
+<span class="text-secondary">[14:22:08]</span>
+<span>Querying Hindsight vector DB for similar incident signatures in <code class="text-tertiary">us-east-1</code>...</span>
+</div>
+<div class="flex items-start gap-space-sm text-on-surface-variant pl-space-lg">
+<span>-&gt; Match found: INC-8829 (94% similarity). Root cause identified as expired IAM token cache.</span>
+</div>
+<div class="flex items-start gap-space-sm text-on-surface">
+<span class="text-secondary">[14:22:14]</span>
+<span class="text-secondary font-semibold">Evaluating hypothesis: Rotating service account IAM credentials will clear cascading gateway timeouts.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Hindsight Memory & Runbook Execution (3 cols) -->
+<div class="col-span-3 flex flex-col gap-space-lg">
+<!-- Hindsight Memory Lookup Card -->
+<div class="flex flex-col bg-surface-container-low rounded-xl p-space-lg shadow-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary">memory</span>
+<span class="font-headline-sm">Hindsight Memory</span>
+</div>
+<span class="font-mono-sm text-tertiary">Vector Match</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<div class="p-space-md bg-surface-container-lowest rounded-lg border-l-2 border-tertiary">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-mono-sm text-tertiary">INC-8829</span>
+<span class="font-mono-sm text-on-surface-variant">Similarity: 0.94</span>
+</div>
+<p class="font-body-sm text-on-surface mb-space-sm">IAM token cache expiration leading to downstream 504 gateway timeouts.</p>
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 bg-surface-container-high rounded text-[10px] font-mono-sm text-on-surface-variant">Auto-remediated</span>
+<span class="px-space-xs py-0.5 bg-surface-container-high rounded text-[10px] font-mono-sm text-on-surface-variant">IAM Policy</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Runbook Step Execution Card -->
+<div class="flex flex-col bg-surface-container-low rounded-xl p-space-lg shadow-lg flex-1">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary">checklist</span>
+<span class="font-headline-sm">Runbook Execution</span>
+</div>
+<span class="font-mono-sm px-space-sm py-space-xs bg-secondary/10 text-secondary rounded">Step 2/4</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Step 1: Completed -->
+<div class="flex items-start gap-space-md p-space-md bg-surface-container-lowest rounded-lg">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div class="flex flex-col flex-1">
+<span class="font-headline-sm text-on-surface">Step 1: Image Tag Accessibility</span>
+<span class="font-body-sm text-on-surface-variant">Verified in Artifact Registry successfully.</span>
+</div>
+</div>
+<!-- Step 2: Running -->
+<div class="flex items-start gap-space-md p-space-md bg-surface-container-high rounded-lg border border-secondary/40 shadow-md">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 animate-spin">
+<span class="material-symbols-outlined text-[14px]">progress_activity</span>
+</div>
+<div class="flex flex-col flex-1">
+<span class="font-headline-sm text-on-surface">Step 2: Rotate IAM Credentials</span>
+<span class="font-body-sm text-secondary font-mono-sm mt-0.5">Running auto-remediation script...</span>
+</div>
+</div>
+<!-- Step 3: Pending -->
+<div class="flex items-start gap-space-md p-space-md bg-surface-container-lowest rounded-lg opacity-60">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="font-mono-sm">3</span>
+</div>
+<div class="flex flex-col flex-1">
+<span class="font-headline-sm text-on-surface">Step 3: Flush Redis Gateway Cache</span>
+<span class="font-body-sm text-on-surface-variant">Pending completion of Step 2</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="mt-auto pt-space-lg flex gap-space-md">
+<button class="flex-1 py-space-md bg-primary text-on-primary rounded-xl font-headline-sm hover:opacity-90 transition-all">Approve Fix</button>
+<button class="px-space-lg py-space-md bg-surface-container-highest text-error rounded-xl font-headline-sm hover:bg-error-container hover:text-on-error-container transition-all">Abort</button>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>
